@@ -153,7 +153,6 @@ var Navigation = {
     switch (actualHash) {
       case '#languages':
         UIManager.mainTitle.innerHTML = _('language');
-        // Hide refresh button in case we end up here coming back from wifi
         break;
       case '#data_3g':
         UIManager.mainTitle.innerHTML = _('3g');
@@ -161,14 +160,14 @@ var Navigation = {
           getStatus(UIManager.updateDataConnectionStatus.bind(UIManager));
         break;
       case '#wifi':
-        UIManager.mainTitle.innerHTML = _('wifi');
+        UIManager.mainTitle.innerHTML = _('selectNetwork');
         UIManager.activationScreen.classList.remove('no-options');
         if (UIManager.navBar.classList.contains('secondary-menu')) {
           UIManager.navBar.classList.remove('secondary-menu');
           return;
         }
         // Avoid refresh when connecting
-        WifiManager.scan(UIManager.renderNetworks);
+        WifiManager.scan(WifiUI.renderNetworks);
         break;
       case '#date_and_time':
         UIManager.mainTitle.innerHTML = _('dateAndTime');
