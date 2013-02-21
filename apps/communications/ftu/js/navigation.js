@@ -244,6 +244,12 @@ var Navigation = {
 
   manageStep: function n_manageStep() {
     var self = this;
+    // Retrieve future location
+    var futureLocation = steps[self.currentStep].hash;
+    // There is some locations which need a 'loading'
+    if (futureLocation === '#wifi') {
+      utils.overlay.show(_('scanningNetworks'), 'spinner');
+    }
     // Navigation bar management
     if (steps[this.currentStep].onlyForward) {
       UIManager.navBar.classList.add('forward-only');
@@ -261,8 +267,8 @@ var Navigation = {
       nextButton.textContent = _('navbar-next');
     }
     nextButton.appendChild(innerNode);
-
-    window.location.hash = steps[self.currentStep].hash;
+    // Change hash to the right location
+    window.location.hash = futureLocation;
     // SIM card management
     if (steps[this.currentStep].requireSIM) {
       SimManager.handleCardState(function check_cardState(response) {

@@ -38,7 +38,6 @@ var WifiManager = {
   },
 
   scan: function wn_scan(callback) {
-    utils.overlay.show(_('scanningNetworks'), 'spinner');
     if ('mozWifiManager' in window.navigator) {
       var req = WifiManager.api.getNetworks();
       var self = this;
@@ -48,7 +47,7 @@ var WifiManager = {
       };
       req.onerror = function onScanError() {
         console.log('Error reading networks: ' + req.error.name);
-        callback(null);
+        callback();
       };
     } else {
       var fakeNetworks = [
@@ -115,6 +114,10 @@ var WifiManager = {
     return network;
   },
   connect: function wn_connect(ssid, password, user, callback) {
+    if (!this.api) {
+      // TODO Un back
+      return;
+    }
     var network = this.getNetwork(ssid);
     this.ssid = ssid;
     var key = this.getSecurityType(network);
@@ -191,6 +194,7 @@ var WifiManager = {
 var WifiUI = {
 
   joinNetwork: function wui_jn() {
+    // TODO Hay que limpiar
     var password = document.getElementById('wifi_password').value;
     if (password == '') {
       // TODO Check with UX if this error is needed
@@ -214,13 +218,28 @@ var WifiUI = {
   chooseNetwork: function wui_cn(event) {
     // Retrieve SSID from dataset
     var ssid = event.target.dataset.ssid;
-
+    // We look for if there is a previous selected network
+    // and we remove their status
+    var networkSelected = document.querySelectorAll('li[data-wifi-selected]')[0];
+    if (networkSelected) {
+      networkSelected.removeAttribute('data-wifi-selected');
+      networkSelected.getElementsByTagName('aside')[0].classList.remove('connecting');
+      // TODO Recupero el estado anterior
+      var security = networkSelected.dataset.security;
+      var securityLevelDOM = networkSelected.querySelectorAll('p[data-security-level]')[0];
+      if (!security || security === '') {
+        securityLevelDOM.textContent = _('securityOpen');
+      } else {
+        securityLevelDOM.textContent = security;
+      }
+    }
+    // At the end we update the selected network
+    event.target.dataset.wifiSelected = true;
     // Do we need to type password?
     if (!WifiManager.isPasswordMandatory(ssid)) {
       WifiManager.connect(ssid);
       return;
     }
-
     // Remove refresh option
     UIManager.activationScreen.classList.add('no-options');
     // Update title
@@ -264,22 +283,19 @@ var WifiUI = {
     passwordInput.value = '';
     ssidHeader.value = ssid;
 
-    // Render form taking into account the type of network
-    WifiUI.renderNetworkConfiguration(selectedNetwork, function() {
-      // Activate secondary menu
-      UIManager.navBar.classList.add('secondary-menu');
-      // Update changes in form
-      if (WifiManager.isUserMandatory(ssid)) {
-        userLabel.classList.remove('hidden');
-        userInput.classList.remove('hidden');
-      } else {
-        userLabel.classList.add('hidden');
-        userInput.classList.add('hidden');
-      }
+    // Activate secondary menu
+    UIManager.navBar.classList.add('secondary-menu');
+    // Update changes in form
+    if (WifiManager.isUserMandatory(ssid)) {
+      userLabel.classList.remove('hidden');
+      userInput.classList.remove('hidden');
+    } else {
+      userLabel.classList.add('hidden');
+      userInput.classList.add('hidden');
+    }
 
-      // Change hash
-      window.location.hash = '#configure_network';
-    });
+    // Change hash
+    window.location.hash = '#configure_network';
   },
 
   renderNetworks: function wui_rn(networks) {
@@ -311,6 +327,7 @@ var WifiUI = {
           var icon = document.createElement('aside');
           var ssidp = document.createElement('p');
           var small = document.createElement('p');
+          small.dataset.securityLevel = true;
           // Set Icon
           icon.classList.add('pack-end');
           icon.classList.add('wifi-icon');
@@ -321,6 +338,7 @@ var WifiUI = {
           li.dataset.ssid = network.ssid;
           // Show authentication method
           var keys = network.capabilities;
+          li.dataset.security = keys;
           if (keys && keys.length) {
             small.textContent = keys.join(', ');
             icon.classList.add('secured');
@@ -357,40 +375,23 @@ var WifiUI = {
     utils.overlay.hide();
   },
 
-  renderNetworkConfiguration: function wui_rnc(ssid, callback) {
-    if (callback) {
-      callback();
-    }
-  },
-
   updateNetworkStatus: function wui_uns(ssid, status) {
     var element = document.getElementById(ssid);
-    if (!element)
+    // Check if element exists and it's the selected network
+    if (!element || !element.dataset.wifiSelected){
       return;
-
-    // When inmediate clicks on different networks, clean the others
-    var wifiList = document.querySelectorAll('[data-connecting]');
-    for (var i = 0; i < wifiList.length; i++) {
-      var ssid = wifiList[i].dataset.ssid,
-          network = WifiManager.getNetwork(ssid),
-          security = WifiManager.getSecurityType(network) || _('securityOpen');
-      // Revert state
-      wifiList[i].querySelector('p:last-child').textContent = security;
-      // Stop animation
-      wifiList[i].querySelector('aside').classList.remove('connecting');
-      // Not connecting anymore
-      delete wifiList[i].dataset.connecting;
     }
+      
     // Update the element
     element.querySelector('p:last-child').textContent =
                                                     _('shortStatus-' + status);
 
-    // Animate icon if connecting, stop animation if connected/disconnected
-    if (status != 'connecting' && status != 'associated') {
-      element.querySelector('aside').classList.remove('connecting');
-    } else {
+    // Animate icon if connecting, stop animation if 
+    // failed/connected/disconnected
+    if (status == 'connecting' || status == 'associated') {
       element.querySelector('aside').classList.add('connecting');
-      element.dataset.connecting = true;
+    } else {
+      element.querySelector('aside').classList.remove('connecting');
     }
   }
 
