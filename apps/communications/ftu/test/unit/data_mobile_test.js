@@ -1,6 +1,8 @@
 'use strict';
 
 requireApp('communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
+requireApp('communications/shared/test/unit/mocks/mock_icc_helper.js');
+requireApp('communications/ftu/test/unit/mock_settings.js');
 requireApp('communications/ftu/js/data_mobile.js');
 
 suite('mobile data >', function() {

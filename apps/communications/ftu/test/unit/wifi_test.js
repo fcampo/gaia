@@ -3,6 +3,7 @@
 requireApp('communications/ftu/test/unit/mock_l10n.js');
 requireApp('communications/ftu/test/unit/mock_utils.js');
 requireApp('communications/ftu/test/unit/mock_wifi_helper.js');
+requireApp('communications/ftu/test/unit/mock_wifi_manager.js');
 requireApp(
   'communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 
@@ -15,7 +16,8 @@ var mocksHelperForWifi = new MocksHelper([
 ]).init();
 
 suite('wifi > ', function() {
-  var realL10n;
+  var realL10n,
+      realSettings;
 
   var networksDOM;
   var fakeNetworks = [
@@ -134,6 +136,9 @@ suite('wifi > ', function() {
   suiteSetup(function() {
     realL10n = navigator.mozL10n;
     navigator.mozL10n = MockL10n;
+
+    realSettings = navigator.mozSettings;
+    navigator.mozSettings = MockNavigatorSettings;
   });
 
   setup(function() {
@@ -143,6 +148,17 @@ suite('wifi > ', function() {
   suiteTeardown(function() {
     navigator.mozL10n = realL10n;
     realL10n = null;
+
+    navigator.mozSettings = realSettings;
+    realSettings = null;
+  });
+
+  test('init enables wifi', function() {
+    assert.isTrue(MockNavigatorSettings.mSettings['wifi.enabled']);
+  });
+
+  test('init enables debugging', function() {
+    assert.isTrue(MockNavigatorSettings.mSettings['wifi.debugging.enabled']);
   });
 
   suite('scan networks', function() {
