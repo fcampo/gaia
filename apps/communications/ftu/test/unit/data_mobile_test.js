@@ -1,6 +1,7 @@
 'use strict';
 
-requireApp('communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
+requireApp(
+    'communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 requireApp('communications/shared/test/unit/mocks/mock_icc_helper.js');
 requireApp('communications/ftu/test/unit/mock_settings.js');
 requireApp('communications/ftu/js/data_mobile.js');
@@ -47,22 +48,26 @@ suite('mobile data >', function() {
   });
 
   suite('Toggle status of mobile data', function() {
-    test('toggle status of mobile data', function(done) {
-      DataMobile.toggle(true, function() {
-        assert.isTrue(window.MockNavigatorSettings.mSettings[settingToggleKey]);
+    setup(function() {
+      // real values taken from /shared/resources/apn.json, careful if changed
+      IccHelper.setProperty('iccInfo', {mcc: '214', mnc: '07'});
+    });
+
+    test('turn off mobile data', function(done) {
+      MockNavigatorSettings.mSettings[settingKey] = true;
+      DataMobile.toggle(false, function() {
+        assert.isFalse(MockNavigatorSettings.mSettings[settingKey]);
         done();
       });
     });
 
-    test('toggle status of mobile data', function(done) {
-      DataMobile.toggle(false, function() {
-        assert.isFalse(
-          window.MockNavigatorSettings.mSettings[settingToggleKey]
-        );
+    test('turn on mobile data', function(done) {
+      MockNavigatorSettings.mSettings[settingKey] = false;
+      DataMobile.toggle(true, function() {
+        assert.isTrue(MockNavigatorSettings.mSettings[settingKey]);
         done();
       });
     });
   });
-
 
 });

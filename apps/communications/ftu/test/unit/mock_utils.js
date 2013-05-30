@@ -2,7 +2,8 @@
 
 var Mockutils = {
   overlay: {
-    show: function() {},
-    hide: function() {}
+    showing: false,
+    show: function() {this.showing = true;},
+    hide: function() {this.showing = false;}
   }
 };

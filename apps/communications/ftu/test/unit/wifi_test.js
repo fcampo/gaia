@@ -139,10 +139,19 @@ suite('wifi > ', function() {
 
     realSettings = navigator.mozSettings;
     navigator.mozSettings = MockNavigatorSettings;
+
+    mocksHelper.suiteSetup();
   });
 
   setup(function() {
+    createDOM();
+    mocksHelper.setup();
     WifiManager.init();
+  });
+
+  teardown(function() {
+    mocksHelper.teardown();
+    container.parentNode.removeChild(container);
   });
 
   suiteTeardown(function() {
@@ -151,14 +160,22 @@ suite('wifi > ', function() {
 
     navigator.mozSettings = realSettings;
     realSettings = null;
+
+    mocksHelper.suiteTeardown();
   });
 
-  test('init enables wifi', function() {
+  test('enables wifi on start', function() {
     assert.isTrue(MockNavigatorSettings.mSettings['wifi.enabled']);
   });
-
-  test('init enables debugging', function() {
+  test('enables debugging on start', function() {
     assert.isTrue(MockNavigatorSettings.mSettings['wifi.debugging.enabled']);
+  });
+  test('disconnect from network at start', function() {
+    assert.isNull(WifiManager.gCurrentNetwork);
+  });
+  test('disables debugging when exits', function() {
+    WifiManager.finish();
+    assert.isFalse(MockNavigatorSettings.mSettings['wifi.debugging.enabled']);
   });
 
   suite('scan networks', function() {
@@ -223,6 +240,20 @@ suite('wifi > ', function() {
         done();
       });
       clock.tick(10000);
+    });
+  });
+  suite('connect to network', function() {
+    test('connect to open wifi', function() {
+
+    });
+    test('connect to WEP', function() {
+
+    });
+    test('connect to WPA-PSK', function() {
+
+    });
+    test('connect to WPA-EAP', function() {
+
     });
   });
 
