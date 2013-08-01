@@ -1,35 +1,113 @@
 'use strict';
 
-var MockWifiManager = {
-  networks: null,
+(function(window) {
 
-  scan: function() {},
-  forget: function() {},
-  setNetworks: function(newNetworks) {
-    this.networks = newNetworks;
-  },
-  getNetworks: function() {
-    var self = this;
-    return {
-      set onsuccess(callback) {
-        this.result = self.networks;
-        callback.call(this);
-      },
-      set onerror(callback) {}
-    };
-  },
-  connection: {
-    network: {
-      get status() {
-        return 'connected';
-      },
-      get ssid() {
-        return 'Network_SSID';
+  function _getFakeNetworks() {
+    var request = this.networks ?
+                  { result: this.networks } :
+                  { error: { name: 'Networks not found' } };
+
+    setTimeout(function() {
+      if (request.onsuccess) {
+        request.onsuccess();
+      } else {
+        request.onerror();
       }
-    }
-  }
-};
+    }, 200);
 
-var MockWifiUI = {
-  renderNetworks: function() {}
-};
+    return request;
+  }
+
+  function _setFakeNetworks(newNetworks) {
+    this.networks = newNetworks;
+  }
+
+  window.MockNavigatorWifiManager = {
+    // modify the current fake list of networks
+    setNetworks: _setFakeNetworks,
+
+    // true if the wifi is enabled
+    enabled: false,
+    macAddress: 'xx:xx:xx:xx:xx:xx',
+
+    // enables/disables the wifi
+    setEnabled: function fakeSetEnabled(bool) {
+      var self = this;
+      var request = { result: bool };
+
+      setTimeout(function() {
+        if (request.onsuccess) {
+          request.onsuccess();
+        }
+        if (bool) {
+          self.onenabled();
+        } else {
+          self.ondisabled();
+        }
+      });
+
+      self.enabled = bool;
+      return request;
+    },
+
+    // returns a list of visible/known networks
+    getNetworks: _getFakeNetworks,
+    getKnownNetworks: _getFakeNetworks,
+
+    // selects a network
+    associate: function fakeAssociate(network) {
+      var self = this;
+      var connection = { result: network };
+      var networkEvent = { network: network };
+
+      setTimeout(function fakeConnecting() {
+        self.connection.network = network;
+        self.connection.status = 'connecting';
+        self.onstatuschange(networkEvent);
+      }, 0);
+
+      setTimeout(function fakeAssociated() {
+        self.connection.network = network;
+        self.connection.status = 'associated';
+        self.onstatuschange(networkEvent);
+      }, 1000);
+
+      setTimeout(function fakeConnected() {
+        network.connected = true;
+        self.connected = network;
+        self.connection.network = network;
+        self.connection.status = 'connected';
+        self.onstatuschange(networkEvent);
+      }, 2000);
+
+      return connection;
+    },
+
+    // forgets a network (disconnect)
+    forget: function fakeForget(network) {
+      var self = this;
+      var networkEvent = { network: network };
+
+      setTimeout(function() {
+        network.connected = false;
+        self.connected = null;
+        self.connection.network = null;
+        self.connection.status = 'disconnected';
+        self.onstatuschange(networkEvent);
+      }, 0);
+    },
+
+    // event listeners
+    onenabled: function(event) {},
+    ondisabled: function(event) {},
+    onstatuschange: function(event) {},
+
+    // returns a network object for the currently connected network (if any)
+    connected: null,
+
+    connection: {
+      status: 'disconnected',
+      network: null
+    }
+  };
+  })(this);

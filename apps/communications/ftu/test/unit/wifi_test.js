@@ -4,6 +4,8 @@ requireApp('communications/ftu/test/unit/mock_l10n.js');
 requireApp('communications/ftu/test/unit/mock_utils.js');
 requireApp('communications/ftu/test/unit/mock_wifi_helper.js');
 requireApp('communications/ftu/test/unit/mock_wifi_manager.js');
+requireApp('communications/ftu/test/unit/mock_navigator_settings.js');
+requireApp('communications/ftu/test/unit/mock_navigator_wifi_manager.js');
 requireApp(
   'communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 
@@ -140,6 +142,9 @@ suite('wifi > ', function() {
     realSettings = navigator.mozSettings;
     navigator.mozSettings = MockNavigatorSettings;
 
+    realWifiManager = navigator.mozWifiManager;
+    navigator.mozWifiManager = MockNavigatorWifiManager;
+
     mocksHelper.suiteSetup();
   });
 
@@ -147,6 +152,8 @@ suite('wifi > ', function() {
     createDOM();
     mocksHelper.setup();
     WifiManager.init();
+    // we need to overwrite the api initialized on init()
+    WifiManager.api = navigator.mozWifiManager;
   });
 
   teardown(function() {
@@ -191,6 +198,36 @@ suite('wifi > ', function() {
         assert.isUndefined(networks, 'return zero networks');
         done();
       });
+    });
+
+    test('some available', function(done) {
+      navigator.mozWifiManager.setNetworks(fakeNetworks);
+      WifiManager.scan(function(networks) {
+        assert.isTrue(utils.overlay.showing, 'shows loading overlay');
+        assert.isDefined(networks, 'return networks');
+        assert.isNotNull(networks, 'return valid networks');
+        assert.equal(networks, fakeNetworks, 'return existing networks');
+        done();
+      });
+    });
+  });
+
+  suite('render networks when none available >', function() {
+    var networksDOM;
+
+    setup(function() {
+      networksDOM = document.getElementById('networks');
+      WifiUI.renderNetworks();
+    });
+
+    test('no networks, no paint', function() {
+      var elements = networksDOM.querySelectorAll('li');
+      assert.equal(elements.length, 0, 'no elements created');
+    });
+
+    test('no networks shows warning', function() {
+      var warning = document.getElementById('no-result-container');
+      assert.isNotNull(warning, 'warning is shown');
     });
 
     test('some available', function(done) {
@@ -242,18 +279,45 @@ suite('wifi > ', function() {
       clock.tick(10000);
     });
   });
-  suite('connect to network', function() {
-    test('connect to open wifi', function() {
 
+  suite('render available networks >', function() {
+    var networksDOM;
+
+    setup(function() {
+      networksDOM = document.getElementById('networks');
+      WifiUI.renderNetworks(fakeNetworks);
     });
-    test('connect to WEP', function() {
 
+    test('creates network list', function() {
+      assert.isNotNull(document.getElementById('networks-list'));
     });
-    test('connect to WPA-PSK', function() {
 
+    test('paints as many networks as detected', function() {
+      var elements = networksDOM.querySelectorAll('li');
+      assert.equal(elements.length, fakeNetworks.length, 'elements created');
     });
-    test('connect to WPA-EAP', function() {
 
+    test('ordered by signal strength', function() {
+      var elements = networksDOM.querySelectorAll('li'),
+          networkLevels = [],
+          sorted = true,
+          icon;
+
+      for (var i = 0; i < elements.length; i++) {
+        icon = elements[i].querySelector('aside');
+        // trusting here that all the icons are styled adding
+        // the classes in the same order
+        // { 'pack-end', 'wifi-icon', 'level-<n>', 'wifi-signal' }
+        networkLevels.push(icon.classList[2].split('-').pop());
+      }
+
+      for (var i = 1; i < networkLevels.length; i++) {
+        if (networkLevels[i - 1] < networkLevels[i]) {
+          sorted = false;
+          break;
+        }
+      }
+      assert.isTrue(sorted);
     });
   });
 

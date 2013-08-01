@@ -1,6 +1,7 @@
 'use strict';
 
 requireApp('communications/ftu/js/navigation.js');
+requireApp('communications/ftu/test/unit/mock_navigation.html.js');
 
 requireApp('communications/ftu/test/unit/mock_l10n.js');
 requireApp('communications/ftu/test/unit/mock_data_mobile.js');
@@ -20,7 +21,6 @@ requireApp('communications/ftu/test/unit/mock_navigator_wifi_manager.js');
 requireApp(
     'communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 
-requireApp('communications/ftu/test/unit/mock_navigation.html.js');
 
 mocha.globals(['open']);
 

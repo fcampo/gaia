@@ -48,10 +48,6 @@ suite('mobile data >', function() {
   });
 
   suite('Toggle status of mobile data', function() {
-    setup(function() {
-      // real values taken from /shared/resources/apn.json, careful if changed
-      IccHelper.setProperty('iccInfo', {mcc: '214', mnc: '07'});
-    });
 
     test('turn off mobile data', function(done) {
       MockNavigatorSettings.mSettings[settingKey] = true;
