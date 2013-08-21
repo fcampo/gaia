@@ -319,6 +319,54 @@ suite('wifi > ', function() {
       }
       assert.isTrue(sorted);
     });
+
+    suite('connect to network', function() {
+      var networkList,
+          currentEvent;
+
+      setup(function() {
+        networkList = fakeNetworks;
+
+        currentEvent = {
+          target: {
+            dataset: {}
+          }
+        };
+      });
+
+      teardown(function() {
+        networkList = null;
+        currentEvent = null;
+      });
+
+      test('connect to open wifi', function(done) {
+        currentEvent.target.dataset = fakeNetworks[0]; // Mozilla Guest [Open]
+        var element = document.getElementById(currentEvent.target.dataset.ssid);
+        WifiUI.chooseNetwork(currentEvent);
+        assert.equal(element.dataset.wifiSelected, 'true');
+        // If it's OPEN, it tries to connect to the network directly
+        assert.include(element.querySelector('aside').classList, 'connecting');
+        setTimeout(function() {
+console.log(element.querySelector('aside').classList);
+        assert.include(element.querySelector('aside').classList, 'connecting');
+          done();
+        }, 1000);
+      });
+
+      test('connect to WEP', function() {
+        currentEvent.target.dataset = fakeNetworks[1]; // Livebox 6752 [WEP]
+        var element = document.getElementById(currentEvent.target.dataset.ssid);
+        WifiUI.chooseNetwork(currentEvent);
+        assert.equal(element.dataset.wifiSelected, 'true');
+
+      });
+      test('connect to WPA-PSK', function() {
+
+      });
+      test('connect to WPA-EAP', function() {
+
+      });
+    });
   });
 
 });

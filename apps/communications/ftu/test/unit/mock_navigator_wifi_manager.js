@@ -13,7 +13,7 @@
       } else {
         request.onerror();
       }
-    }, 200);
+    }, 100);
 
     return request;
   }
@@ -56,6 +56,7 @@
 
     // selects a network
     associate: function fakeAssociate(network) {
+console.log('>> API associate');
       var self = this;
       var connection = { result: network };
       var networkEvent = { network: network };
@@ -64,23 +65,27 @@
         self.connection.network = network;
         self.connection.status = 'connecting';
         self.onstatuschange(networkEvent);
+console.log('>> fake connecting');
+
+        setTimeout(function fakeAssociated() {
+          self.connection.network = network;
+          self.connection.status = 'associated';
+          self.onstatuschange(networkEvent);
+console.log('>> fake associating');
+
+          setTimeout(function fakeConnected() {
+            network.connected = true;
+            self.connected = network;
+            self.connection.network = network;
+            self.connection.status = 'connected';
+            self.onstatuschange(networkEvent);
+            console.log('>> fake CONNECTED');
+
+console.log('>> returning connection: ' + JSON.stringify(connection));
+          return connection;
+          }, 200);
+        }, 100);
       }, 0);
-
-      setTimeout(function fakeAssociated() {
-        self.connection.network = network;
-        self.connection.status = 'associated';
-        self.onstatuschange(networkEvent);
-      }, 1000);
-
-      setTimeout(function fakeConnected() {
-        network.connected = true;
-        self.connected = network;
-        self.connection.network = network;
-        self.connection.status = 'connected';
-        self.onstatuschange(networkEvent);
-      }, 2000);
-
-      return connection;
     },
 
     // forgets a network (disconnect)
