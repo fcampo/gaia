@@ -56,7 +56,6 @@
 
     // selects a network
     associate: function fakeAssociate(network) {
-console.log('>> API associate');
       var self = this;
       var connection = { result: network };
       var networkEvent = { network: network };
@@ -65,13 +64,11 @@ console.log('>> API associate');
         self.connection.network = network;
         self.connection.status = 'connecting';
         self.onstatuschange(networkEvent);
-console.log('>> fake connecting');
 
         setTimeout(function fakeAssociated() {
           self.connection.network = network;
           self.connection.status = 'associated';
           self.onstatuschange(networkEvent);
-console.log('>> fake associating');
 
           setTimeout(function fakeConnected() {
             network.connected = true;
@@ -79,10 +76,7 @@ console.log('>> fake associating');
             self.connection.network = network;
             self.connection.status = 'connected';
             self.onstatuschange(networkEvent);
-            console.log('>> fake CONNECTED');
-
-console.log('>> returning connection: ' + JSON.stringify(connection));
-          return connection;
+            return connection;
           }, 200);
         }, 100);
       }, 0);

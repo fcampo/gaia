@@ -100,7 +100,6 @@ suite('navigation >', function() {
     if (realOnLine) {
       Object.defineProperty(navigator, 'onLine', realOnLine);
     }
-  });
 
   var setStepState = function(current, callback) {
     Navigation.currentStep = Navigation.previousStep = current;
@@ -152,6 +151,7 @@ suite('navigation >', function() {
       setStepState(1);
       var observer = new MutationObserver(function() {
         observer.disconnect();
+
         assert.equal(UIManager.mainTitle.innerHTML, _('language'));
         done();
       });

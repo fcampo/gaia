@@ -71,8 +71,6 @@ var WifiManager = {
     }
   },
   getNetwork: function wm_gn(ssid) {
-console.log('..searching for network ' + ssid);
-console.log('...entre las existentes: ' + JSON.stringify(this.networks));
     var network;
     for (var i = 0; i < this.networks.length; i++) {
       if (this.networks[i].ssid == ssid) {
@@ -80,11 +78,9 @@ console.log('...entre las existentes: ' + JSON.stringify(this.networks));
         break;
       }
     }
-console.log('Found ' + JSON.stringify(network));
     return network;
   },
   connect: function wn_connect(ssid, password, user) {
-console.log('>> wifiBG connecting');
     var network = this.getNetwork(ssid);
     this.ssid = ssid;
     WifiHelper.setPassword(network, password, user);
@@ -158,7 +154,6 @@ var WifiUI = {
   },
 
   connect: function wui_connect(ssid, password, user) {
-console.log('>> wifiUI connecting');
     // First we check if there is a previous selected network
     // and we remove their status
     var networkSelected = document.querySelector('li[data-wifi-selected]');
@@ -194,10 +189,9 @@ console.log('>> wifiUI connecting');
   chooseNetwork: function wui_cn(event) {
     // Retrieve SSID from dataset
     var ssid = event.target.dataset.ssid;
-console.log('>> wifi chosen = ' + ssid);
+    var selectedNetwork = WifiManager.getNetwork(ssid);
     // Do we need to type password?
-    if (WifiHelper.isOpen(WifiManager.getNetwork(ssid))) {
-console.log('>> is open');
+    if (WifiHelper.isOpen(selectedNetwork)) {
       WifiUI.connect(ssid);
       return;
     }
@@ -208,7 +202,6 @@ console.log('>> is open');
     UIManager.mainTitle.textContent = ssid;
 
     // Update network
-    var selectedNetwork = WifiManager.getNetwork(ssid);
     var ssidHeader = document.getElementById('wifi_ssid');
     var userLabel = document.getElementById('label_wifi_user');
     var userInput = document.getElementById('wifi_user');
@@ -233,13 +226,12 @@ console.log('>> is open');
     };
 
     // Update form
-    passwordInput.value = '';
     ssidHeader.value = ssid;
 
     // Activate secondary menu
     UIManager.navBar.classList.add('secondary-menu');
     // Update changes in form
-    if (WifiHelper.isEap(WifiManager.getNetwork(ssid))) {
+    if (WifiHelper.isEap(selectedNetwork)) {
       userLabel.classList.remove('hidden');
       userInput.classList.remove('hidden');
     } else {
