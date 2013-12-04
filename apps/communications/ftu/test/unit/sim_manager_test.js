@@ -127,18 +127,6 @@ suite('sim mgmt >', function() {
         UIManager.pinError.classList.add('hidden');
         UIManager.pinRetriesLeft.classList.add('hidden');
       });
-      setup(function() {
-        // start from original state each test
-        UIManager.pinInput.classList.remove('onerror');
-        UIManager.pinError.classList.add('hidden');
-        UIManager.pinRetriesLeft.classList.add('hidden');
-      });
-      teardown(function() {
-        // back to original state
-        UIManager.pinInput.classList.remove('onerror');
-        UIManager.pinError.classList.add('hidden');
-        UIManager.pinRetriesLeft.classList.add('hidden');
-      });
 
       suite('Unlock button > ', function() {
         setup(function() {
@@ -196,18 +184,6 @@ suite('sim mgmt >', function() {
       setup(function() {
         IccHelper.setProperty('cardState', 'pukRequired');
         // start from original state each test
-        UIManager.pukInput.classList.remove('onerror');
-        UIManager.pukError.classList.add('hidden');
-        UIManager.pukRetriesLeft.classList.add('hidden');
-      });
-      setup(function() {
-        // start from original state each test
-        UIManager.pukInput.classList.remove('onerror');
-        UIManager.pukError.classList.add('hidden');
-        UIManager.pukRetriesLeft.classList.add('hidden');
-      });
-      teardown(function() {
-        // back to original state
         UIManager.pukInput.classList.remove('onerror');
         UIManager.pukError.classList.add('hidden');
         UIManager.pukRetriesLeft.classList.add('hidden');
@@ -281,18 +257,6 @@ suite('sim mgmt >', function() {
       setup(function() {
         IccHelper.setProperty('cardState', 'networkLocked');
         // start from original state each test
-        UIManager.xckInput.classList.remove('onerror');
-        UIManager.xckError.classList.add('hidden');
-        UIManager.xckRetriesLeft.classList.add('hidden');
-      });
-      setup(function() {
-        // start from original state each test
-        UIManager.xckInput.classList.remove('onerror');
-        UIManager.xckError.classList.add('hidden');
-        UIManager.xckRetriesLeft.classList.add('hidden');
-      });
-      teardown(function() {
-        // back to original state
         UIManager.xckInput.classList.remove('onerror');
         UIManager.xckError.classList.add('hidden');
         UIManager.xckRetriesLeft.classList.add('hidden');

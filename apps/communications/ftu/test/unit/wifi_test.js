@@ -2,145 +2,65 @@
 
 requireApp('communications/ftu/test/unit/mock_l10n.js');
 requireApp('communications/ftu/test/unit/mock_utils.js');
-requireApp('communications/ftu/test/unit/mock_wifi_helper.js');
-requireApp('communications/ftu/test/unit/mock_wifi_manager.js');
-requireApp('communications/ftu/test/unit/mock_navigator_settings.js');
-requireApp('communications/ftu/test/unit/mock_navigator_wifi_manager.js');
-requireApp('communications/ftu/test/unit/mock_ui_manager.js');
 requireApp('communications/ftu/test/unit/mock_settings.js');
+requireApp('communications/ftu/test/unit/mock_ui_manager.js');
+requireApp('communications/ftu/test/unit/mock_navigator_moz_wifi_manager.js');
 requireApp(
   'communications/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 
 requireApp('communications/ftu/js/wifi.js');
+requireApp('communications/shared/js/wifi_helper.js');
+
+require('/shared/test/unit/load_body_html_helper.js');
 
 var _;
 
 var mocksHelperForWifi = new MocksHelper([
   'utils',
-  'UIManager',
-  'WifiHelper'
+  'UIManager'
 ]).init();
 
 suite('wifi > ', function() {
   var realL10n,
-      realSettings;
+      realSettings,
+      realWifiManager;
 
-  var networksDOM;
+  var container,
+      networksDOM;
   var fakeNetworks = [
       {
         ssid: 'Mozilla Guest',
         bssid: 'xx:xx:xx:xx:xx:xx',
         capabilities: [],
-        relSignalStrength: 98,
+        relSignalStrength: 89,
         connected: false
       },
       {
         ssid: 'Livebox 6752',
         bssid: 'xx:xx:xx:xx:xx:xx',
         capabilities: ['WEP'],
-        relSignalStrength: 89,
+        relSignalStrength: 98,
         connected: false
       },
       {
         ssid: 'Mozilla-G',
         bssid: 'xx:xx:xx:xx:xx:xx',
         capabilities: ['WPA-EAP'],
-        relSignalStrength: 67,
+        relSignalStrength: 32,
         connected: false
       },
       {
         ssid: 'Freebox 8953',
         bssid: 'xx:xx:xx:xx:xx:xx',
         capabilities: ['WPA2-PSK'],
-        relSignalStrength: 32,
+        relSignalStrength: 67,
         connected: false
       }
     ];
 
-  function createDOM() {
-    var markup =
-    '<ol id="progress-bar" class="step-state"></ol>' +
-    '<section id="activation-screen">' +
-    ' <header>' +
-    '  <h1 id="main-title"></h1>' +
-    ' </header>' +
-    ' <section id="wifi">' +
-    '  <div id="wifi-wrapper">' +
-    '    <article id="networks">' +
-    '    </article>' +
-    '    <button id="join-hidden-button">' +
-    '      Join hidden network' +
-    '    </button>' +
-    '  </div>' +
-    ' </section>' +
-    ' <section id="configure_network">' +
-    '  <section id="configure_network_params">' +
-    '    <form>' +
-    '      <input type="text" id="wifi_ssid" class="hidden"></input>' +
-    '      <label id="label_wifi_user">User</label>' +
-    '      <input type="text" id="wifi_user"></input>' +
-    '      <label>Password</label>' +
-    '      <input type="password" id="wifi_password"></input>' +
-    '      <label id="label_show_password">' +
-    '        <input type="checkbox" data-ignore name="show_password" />' +
-    '        <span></span>' +
-    '        <p id="wifi_show_password">Show Password</p>' +
-    '      </label>' +
-    '    </form>' +
-    '  </section>' +
-    ' </section>' +
-    ' <section id="hidden-wifi-authentication">' +
-    '  <div>' +
-    '    <form>' +
-    '      <label id="label_wifi_ssid">' +
-    '        SSID Network Name' +
-    '      </label>' +
-    '      <input type="text" name="wifi_ssid" id="hidden-wifi-ssid"/>' +
-    '      <label id="label_wifi_security">' +
-    '        Security' +
-    '      </label>' +
-    '      <select id="hidden-wifi-security">' +
-    '        <option>none</option>' +
-    '        <option>WEP</option>' +
-    '        <option>WPA-PSK</option>' +
-    '        <option>WPA-EAP</option>' +
-    '      </select>' +
-    '      <div class="hidden" id="hidden-wifi-identity-box">' +
-    '        <label id="label_wifi_identity">' +
-    '          Identity' +
-    '        </label>' +
-    '        <input type="text" id="hidden-wifi-identity"/>' +
-    '      </div>' +
-    '      <label id="label_hidden_wifi_password">' +
-    '        Password' +
-    '      </label>' +
-    '      <input type="password" id="hidden-wifi-password" />' +
-    '      <label id="label_show_password">' +
-    '        <input type="checkbox" id="hidden-wifi-show-password" />' +
-    '        <span></span>' +
-    '        <p>Show Password</p>' +
-    '      </label>' +
-    '    </form>' +
-    '  </div>' +
-    ' </section>' +
-    ' <menu id="nav-bar">' +
-    '   <button id="back">Back</button>' +
-    '   <button id="forward">Next</button>' +
-    '   <button id="wifi-join-button">Join</button>' +
-    '   <button id="unlock-sim-button">Send</button>' +
-    '   <button id="skip-pin-button">Skip</button>' +
-    ' </menu>' +
-    '</section>';
-
-    container = document.createElement('div');
-    container.insertAdjacentHTML('beforeend', markup);
-    document.body.appendChild(container);
-  }
-
-  mocksHelperForWifi.attachTestHelpers();
-
   suiteSetup(function() {
-    createDOM();
+    loadBodyHTML('/ftu/index.html');
+    mocksHelperForWifi.suiteSetup();
 
     realL10n = navigator.mozL10n;
     navigator.mozL10n = MockL10n;
@@ -149,17 +69,16 @@ suite('wifi > ', function() {
     navigator.mozSettings = MockNavigatorSettings;
 
     realWifiManager = navigator.mozWifiManager;
-    navigator.mozWifiManager = MockNavigatorWifiManager;
-
-    mocksHelper.suiteSetup();
+    navigator.mozWifiManager = MockNavigatorMozWifiManager;
     WifiManager.init();
 
-    // we need to overwrite the api initialized on init()
-    WifiManager.api = navigator.mozWifiManager;
     networksDOM = document.getElementById('networks');
   });
 
   suiteTeardown(function() {
+    document.body.innerHTML = '';
+    mocksHelperForWifi.suiteTeardown();
+
     navigator.mozL10n = realL10n;
     realL10n = null;
 
@@ -169,8 +88,6 @@ suite('wifi > ', function() {
     navigator.mozWifiManager = realWifiManager;
     realWifiManager = null;
 
-    container.parentNode.removeChild(container);
-    mocksHelper.suiteTeardown();
   });
 
   test('enables wifi on start', function() {
@@ -204,39 +121,6 @@ suite('wifi > ', function() {
 
     test('some available', function(done) {
       navigator.mozWifiManager.setNetworks(fakeNetworks);
-      WifiManager.scan(function(networks) {
-        assert.isTrue(utils.overlay.showing, 'shows loading overlay');
-        assert.isDefined(networks, 'return networks');
-        assert.isNotNull(networks, 'return valid networks');
-        assert.equal(networks, fakeNetworks, 'return existing networks');
-        done();
-      });
-    });
-
-    // Need to test scan errors for bug 889623
-    // TODO !!
-
-  });
-
-  suite('render networks when none available >', function() {
-
-    setup(function() {
-      WifiManager.networks = null;
-      WifiUI.renderNetworks();
-    });
-
-    test('no networks, no paint', function() {
-      var elements = networksDOM.querySelectorAll('li');
-      assert.equal(elements.length, 0, 'no elements created');
-    });
-
-    test('no networks shows warning', function() {
-      var warning = document.getElementById('no-result-container');
-      assert.isNotNull(warning, 'warning is shown');
-    });
-
-    test('some available', function(done) {
-      MockNavigatorMozWifiManager.setNetworks(fakeNetworks);
       WifiManager.scan(function(networks) {
         assert.ok(showOverlayStub.calledOnce, 'shows loading overlay');
         assert.isDefined(networks, 'return networks');
@@ -283,6 +167,28 @@ suite('wifi > ', function() {
       });
       clock.tick(10000);
     });
+
+  });
+
+  suite('render networks when none available >', function() {
+    var showOverlayStub;
+
+    setup(function() {
+      showOverlayStub = this.sinon.spy(utils.overlay, 'show');
+      WifiManager.networks = null;
+      WifiUI.renderNetworks();
+    });
+
+    test('shouldn\'t paint any network', function() {
+      var elements = networksDOM.querySelectorAll('li');
+      assert.equal(elements.length, 0, 'no elements created');
+    });
+
+    test('should show a warning', function() {
+      var warning = document.getElementById('no-result-container');
+      assert.isNotNull(warning, 'warning is shown');
+    });
+
   });
 
   suite('render available networks >', function() {
@@ -296,7 +202,7 @@ suite('wifi > ', function() {
       assert.isNotNull(document.getElementById('networks-list'));
     });
 
-    test('paints as many networks as detected', function() {
+    test('with as many networks as detected', function() {
       var elements = networksDOM.querySelectorAll('li');
       assert.equal(elements.length, fakeNetworks.length, 'elements created');
     });
@@ -346,30 +252,29 @@ suite('wifi > ', function() {
 
       teardown(function() {
         element =
-        network =
-        networkList =
-        currentEvent =
-        userInput = null;
+          network =
+            networkList =
+              currentEvent =
+                userInput = null;
         connectSpy.reset();
       });
 
-      test('connect to open wifi', function() {
-        currentEvent.target.dataset = fakeNetworks[0]; // Mozilla Guest [Open]
-        network = currentEvent.target.dataset;
+      test('connect to open wifi', function() { // Mozilla Guest [Open]
+        network = currentEvent.target.dataset = fakeNetworks[0];
         element = document.getElementById(network.ssid);
 
         WifiUI.chooseNetwork(currentEvent);
 
-        // If it's OPEN, it tries to connect to the network directly
+        // If it's OPEN, it should try to connect to the network directly
         assert.equal(element.dataset.wifiSelected, 'true');
         assert.include(element.querySelector('aside').classList, 'connecting');
         assert.ok(connectSpy.calledOnce);
         assert.ok(connectSpy.calledWith(network.ssid));
       });
 
-      test('connect to WEP', function() {
-        currentEvent.target.dataset = fakeNetworks[1]; // Livebox 6752 [WEP]
-        network = currentEvent.target.dataset;
+      test('connect to WEP', function() { // Livebox 6752 [WEP]
+        network = currentEvent.target.dataset = fakeNetworks[1];
+        currentEvent.target.dataset;
         element = document.getElementById(network.ssid);
         WifiUI.chooseNetwork(currentEvent);
 
@@ -380,6 +285,7 @@ suite('wifi > ', function() {
 
         document.getElementById('wifi_password').value = 'password';
         document.getElementById('wifi_user').value = '';
+
         // Connection
         WifiUI.joinNetwork();
         assert.equal(element.dataset.wifiSelected, 'true');
@@ -387,9 +293,9 @@ suite('wifi > ', function() {
         assert.ok(connectSpy.calledWithExactly(network.ssid, 'password', ''));
       });
 
-      test('connect to WPA-EAP', function() {
-        currentEvent.target.dataset = fakeNetworks[2]; // Mozilla-G [WPA-EAP]
-        network = currentEvent.target.dataset;
+      test('connect to WPA-EAP', function() { // Mozilla-G [WPA-EAP]
+        network = currentEvent.target.dataset = fakeNetworks[2];
+        currentEvent.target.dataset;
         element = document.getElementById(network.ssid);
         WifiUI.chooseNetwork(currentEvent);
 
@@ -407,9 +313,8 @@ suite('wifi > ', function() {
         assert.ok(connectSpy.calledWith(network.ssid, 'password', 'user'));
       });
 
-      test('connect to WPA-PSK', function() {
-        currentEvent.target.dataset = fakeNetworks[3]; // Freebox 8953 [WPA-PSK]
-        network = currentEvent.target.dataset;
+      test('connect to WPA-PSK', function() { // Freebox 8953 [WPA-PSK]
+        network = currentEvent.target.dataset = fakeNetworks[3];
         element = document.getElementById(network.ssid);
         WifiUI.chooseNetwork(currentEvent);
 

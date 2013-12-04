@@ -154,10 +154,12 @@ var WifiUI = {
   },
 
   connect: function wui_connect(ssid, password, user) {
+    console.log('> CONNECT');
     // First we check if there is a previous selected network
     // and we remove their status
     var networkSelected = document.querySelector('li[data-wifi-selected]');
     if (networkSelected) {
+      console.log('something selected before');
       var icon = networkSelected.querySelector('aside');
       networkSelected.removeAttribute('data-wifi-selected');
       networkSelected.classList.remove('connected');
@@ -174,24 +176,29 @@ var WifiUI = {
       }
     }
 
+  console.log('> CHANGING');
     // And then end we update the selected network
     var newWifi = document.getElementById(ssid);
+  console.log('> antes - ' + newWifi.innerHTML);
     newWifi.dataset.wifiSelected = true;
     newWifi.querySelector('p:last-child').textContent =
                                                     _('shortStatus-connecting');
     newWifi.querySelector('aside').classList.add('connecting');
-
+console.log('> despues - ' + newWifi.innerHTML);
 
     // Finally we try to connect to the network
     WifiManager.connect(ssid, password, user);
   },
 
   chooseNetwork: function wui_cn(event) {
+    console.log('> CHOOSE');
     // Retrieve SSID from dataset
     var ssid = event.target.dataset.ssid;
     var selectedNetwork = WifiManager.getNetwork(ssid);
+    console.log('> selectedNetwork = ' + JSON.stringify(selectedNetwork));
     // Do we need to type password?
     if (WifiHelper.isOpen(selectedNetwork)) {
+      console.log('> is open, so connect');
       WifiUI.connect(ssid);
       return;
     }

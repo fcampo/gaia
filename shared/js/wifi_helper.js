@@ -2,12 +2,8 @@
 
 var WifiHelper = {
   getWifiManager: function() {
-    return this.wifiManager;
-  },
-
-  wifiManager: function() {
     return navigator.mozWifiManager;
-  }(),
+  },
 
   setPassword: function(network, password, identity, eap) {
     var encType = this.getKeyManagement(network);
@@ -49,6 +45,7 @@ var WifiHelper = {
   },
 
   getSecurity: function(network) {
+    console.log('>>> security');
     // Bug 791506: Code for backward compatibility. Modify after landed.
     return network.security === undefined ?
       network.capabilities : network.security;
@@ -60,6 +57,7 @@ var WifiHelper = {
   },
 
   getKeyManagement: function(network) {
+    console.log('>>> key management');
     var key = this.getSecurity(network)[0];
     if (/WEP$/.test(key))
       return 'WEP';
@@ -77,7 +75,7 @@ var WifiHelper = {
      * Until this is properly implemented, we just compare SSIDs to tell wether
      * the network is already connected or not.
      */
-    var currentNetwork = this.wifiManager.connection.network;
+    var currentNetwork = this.getWifiManager().connection.network;
     if (!currentNetwork || !network)
       return false;
     var key = network.ssid + '+' + this.getSecurity(network).join('+');
@@ -139,6 +137,7 @@ var WifiHelper = {
   },
 
   isOpen: function(network) {
+    console.log('>>> open?');
     return this.getKeyManagement(network) === '';
   },
 
