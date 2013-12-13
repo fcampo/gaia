@@ -46,10 +46,19 @@ var Compose = (function() {
   var subject = {
     showing: false,
     toggle: function sub_toggle() {
-      dom.subject.classList.toggle('hide');
-      // show / hide subject and change the focus
-      (this.showing = !this.showing) ?
-        dom.subject.focus() : dom.message.focus();
+      this.showing ? this.hide() : this.show();
+    },
+    show: function sub_show() {
+      dom.subject.classList.remove('hide');
+      this.showing = true;
+      dom.subject.focus();
+      Compose.updateType();
+      onContentChanged();
+    },
+    hide: function sub_hide() {
+      dom.subject.classList.add('hide');
+      this.showing = false;
+      dom.message.focus();
       Compose.updateType();
       onContentChanged();
     },
@@ -57,6 +66,18 @@ var Compose = (function() {
       dom.subject.value = '';
       dom.subject.classList.add('hide');
       this.showing = false;
+    },
+    getContent: function sub_getContent() {
+      // Only send value if subject is showing. If not, send empty string
+      // We need to transform any linebreak or into a single space
+      return subject.isShowing ?
+             dom.subject.value.replace(/\n\s*/g, ' ') : '';
+    },
+    setContent: function sub_setContent(content) {
+      dom.subject.value = content;
+    },
+    getMaxLength: function sub_getMaxLength() {
+      return dom.subject.maxLength;
     },
     get isEmpty() {
       return !dom.subject.value.length;
@@ -273,17 +294,6 @@ var Compose = (function() {
       }
     },
 
-    toggleSubject: function() {
-      subject.toggle();
-    },
-
-    getSubject: function() {
-      // Only send value if subject is showing. If not, send empty string
-      // We need to transform any linebreak or into a single space
-      return subject.isShowing ?
-               dom.subject.value.replace(/\n\s*/g, ' ') : '';
-    },
-
     getContent: function() {
       var content = [];
       var node;
@@ -327,10 +337,9 @@ var Compose = (function() {
 
     /** Render draft
      *
-     * @param {Draft} draft Draft to be loaded into the composer
+     * @param {Draft} draft Draft to be loaded into the composer.
      *
      */
-
     fromDraft: function(draft) {
       // Clear out the composer
       this.clear();
@@ -342,7 +351,7 @@ var Compose = (function() {
 
       if (draft.subject) {
         dom.subject.value = draft.subject;
-        this.toggleSubject();
+        this.subject.toggle();
       }
 
       // draft content is an array
@@ -358,6 +367,40 @@ var Compose = (function() {
         // Append each fragment in order to the composer
         Compose.append(fragment);
       }, Compose);
+
+      this.focus();
+    },
+
+    /** Render message (sms or mms)
+     *
+     * @param {message} message Full message to be loaded into the composer.
+     *
+     */
+    fromMessage: function(message) {
+      this.clear();
+
+      if (message.type === 'mms') {
+        if (message.subject) {
+          this.subject.setContent(message.subject);
+          this.subject.show();
+        }
+        SMIL.parse(message, function(elements) {
+          elements.forEach(function(element) {
+            if (element.blob) {
+              var attachment = new Attachment(element.blob, {
+                name: element.name,
+                isDraft: true
+              });
+              this.append(attachment);
+            }
+            if (element.text) {
+              this.append(element.text);
+            }
+          }, Compose);
+        });
+      } else {
+        this.append(message.body);
+      }
 
       this.focus();
     },
@@ -640,15 +683,31 @@ var Compose = (function() {
     }
   });
 
-  Object.defineProperty(compose, 'SUBJECT_MAX_LENGTH', {
-    get: function composeGetSubjectMaxLength() {
-      return 40;
-    }
-  });
-
-  Object.defineProperty(compose, 'isSubjectShowing', {
-    get: function composeGetSubjectShowing() {
-      return subject.isShowing;
+  Object.defineProperty(compose, 'subject', {
+    get: function() {
+      return {
+        get maxLength() {
+          return subject.getMaxLength();
+        },
+        get isShowing() {
+          return subject.isShowing;
+        },
+        getContent: function() {
+          return subject.getContent();
+        },
+        setContent: function(content) {
+          subject.setContent(content);
+        },
+        toggle: function() {
+          subject.toggle();
+        },
+        show: function() {
+          subject.show();
+        },
+        hide: function() {
+          subject.hide();
+        }
+      };
     }
   });
 

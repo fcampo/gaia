@@ -277,7 +277,7 @@ suite('thread_ui.js >', function() {
       subject.value = 'foo';
       ThreadUI.cleanFields(true);
       assert.equal(Compose.getContent(), '');
-      assert.equal(Compose.getSubject(), '');
+      assert.equal(Compose.subject.getContent(), '');
     });
 
     suite('rendering suggestions list', function() {
@@ -346,7 +346,7 @@ suite('thread_ui.js >', function() {
 
       test('enabled when there is subject input and is visible', function() {
         subject.value = 'Title';
-        Compose.toggleSubject(); // show the subject
+        Compose.subject.show(); // show the subject
         subject.dispatchEvent(new CustomEvent('input'));
         assert.isFalse(sendButton.disabled);
       });
@@ -432,7 +432,7 @@ suite('thread_ui.js >', function() {
         suite('when there is visible subject with input...', function() {
           setup(function() {
             subject.value = 'Title';
-            Compose.toggleSubject();
+            Compose.subject.show();
           });
 
           teardown(function() {
@@ -484,7 +484,7 @@ suite('thread_ui.js >', function() {
           });
 
           test('after adding subject input', function() {
-            Compose.toggleSubject();
+            Compose.subject.show();
             subject.value = 'Title';
             subject.dispatchEvent(new CustomEvent('input'));
             assert.isFalse(sendButton.disabled);
@@ -1075,7 +1075,7 @@ suite('thread_ui.js >', function() {
     setup(function() {
       banner = document.getElementById('messages-max-length-notice');
       localize = this.sinon.spy(navigator.mozL10n, 'localize');
-      Compose.toggleSubject();
+      Compose.subject.show();
     });
 
     teardown(function() {
@@ -3812,52 +3812,6 @@ suite('thread_ui.js >', function() {
         MockMozActivity.instances[0].onsuccess();
 
         assert.isFalse(Recipients.View.isObscured);
-      });
-    });
-  });
-
-  suite('setMessageBody', function() {
-    setup(function() {
-      this.sinon.stub(Compose, 'clear');
-      this.sinon.stub(Compose, 'append');
-      this.sinon.stub(Compose, 'focus');
-    });
-
-    suite('with data', function() {
-      var testText = 'testing';
-      setup(function() {
-        ThreadUI.setMessageBody(testText);
-      });
-
-      test('calls clear', function() {
-        assert.ok(Compose.clear.called);
-      });
-
-      test('calls append with correct data', function() {
-        assert.ok(Compose.append.calledWith(testText));
-      });
-
-      test('calls focus', function() {
-        assert.ok(Compose.focus.called);
-      });
-    });
-
-    suite('without data', function() {
-      var testText = '';
-      setup(function() {
-        ThreadUI.setMessageBody(testText);
-      });
-
-      test('calls clear', function() {
-        assert.ok(Compose.clear.called);
-      });
-
-      test('does not call append with empty data', function() {
-        assert.isFalse(Compose.append.called);
-      });
-
-      test('calls focus', function() {
-        assert.ok(Compose.focus.called);
       });
     });
   });

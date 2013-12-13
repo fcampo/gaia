@@ -191,26 +191,8 @@ var MessageManager = {
     var request = MessageManager.getMessage(+forward.messageId);
 
     request.onsuccess = (function() {
-      var message = request.result;
-      if (message.type === 'sms') {
-        ThreadUI.setMessageBody(message.body);
-      } else {
+      Compose.fromMessage(request.result);
 
-        SMIL.parse(message, function(parsedArray) {
-          parsedArray.forEach(function(mmsElement) {
-            if (mmsElement.blob) {
-              var attachment = new Attachment(mmsElement.blob, {
-                name: mmsElement.name,
-                isDraft: true
-              });
-              Compose.append(attachment);
-            }
-            if (mmsElement.text) {
-              Compose.append(mmsElement.text);
-            }
-          });
-        });
-      }
       // Focus en recipients
       ThreadUI.recipients.focus();
     }).bind(this);
@@ -248,7 +230,7 @@ var MessageManager = {
         findByPhoneNumber, number, function onData(data) {
           data.source = 'contacts';
           ThreadUI.recipients.add(data);
-          ThreadUI.setMessageBody(activity.body);
+          Compose.fromMessage(activity);
         }
       );
     } else {
@@ -260,7 +242,7 @@ var MessageManager = {
           source: 'manual'
         });
       }
-      ThreadUI.setMessageBody(activity.body);
+      Compose.fromMessage(activity);
     }
 
     // Clean activity object

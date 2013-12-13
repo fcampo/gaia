@@ -99,18 +99,42 @@ suite('compose_test.js', function() {
         Compose.clear();
       });
 
+      test('Show field', function() {
+        Compose.subject.show();
+        assert.isFalse(subject.classList.contains('hide'));
+      });
+
+      test('Hide field', function() {
+        Compose.subject.show();
+        Compose.subject.hide();
+        assert.isTrue(subject.classList.contains('hide'));
+      });
+
+      test('Add content to subject', function() {
+        var content = 'Title';
+        Compose.subject.setContent(content);
+        assert.equal(subject.value, content);
+      });
+
+      test('Get content from subject field', function() {
+        Compose.subject.show(); // we need to show the subject to get content
+        var content = 'Title';
+        subject.value = content;
+        assert.equal(Compose.subject.getContent(), content);
+      });
+
       test('Toggle change the visibility', function() {
         assert.isTrue(subject.classList.contains('hide'));
-        Compose.toggleSubject();
+        Compose.subject.toggle();
         assert.isFalse(subject.classList.contains('hide'));
-        Compose.toggleSubject();
+        Compose.subject.toggle();
         assert.isTrue(subject.classList.contains('hide'));
       });
 
       test('Sent subject doesnt have line breaks (spaces instead)', function() {
         subject.value = 'Line 1\nLine 2\n\n\n\nLine 3';
-        Compose.toggleSubject(); // we need to show the subject to get content
-        var text = Compose.getSubject();
+        Compose.subject.show(); // we need to show the subject to get content
+        var text = Compose.subject.getContent();
         assert.equal(text, 'Line 1 Line 2 Line 3');
       });
     });
@@ -167,11 +191,11 @@ suite('compose_test.js', function() {
       });
       test('Clear removes subject', function() {
         subject.value = 'Title';
-        Compose.toggleSubject();
-        var txt = Compose.getSubject();
+        Compose.subject.show();
+        var txt = Compose.subject.getContent();
         assert.equal(txt, 'Title', 'Something in the txt');
         Compose.clear();
-        txt = Compose.getSubject();
+        txt = Compose.subject.getContent();
         assert.equal(txt, '', 'Nothing in the txt');
       });
     });
@@ -204,6 +228,10 @@ suite('compose_test.js', function() {
       teardown(function() {
         Compose.clear();
       });
+    });
+
+    suite('Prefill MMS', function() {
+
     });
 
     suite('Sending events in correct order', function() {
@@ -377,16 +405,16 @@ suite('compose_test.js', function() {
       });
 
       test('Draft with subject', function() {
-        this.sinon.spy(Compose, 'toggleSubject');
+        // this.sinon.spy(Compose.subject, 'toggle');
         Compose.fromDraft(d1);
-        assert.equal(Compose.getSubject(), d1.subject);
-        assert.isTrue(Compose.isSubjectShowing);
-        sinon.assert.calledOnce(Compose.toggleSubject);
+        assert.equal(Compose.subject.getContent(), d1.subject);
+        assert.isTrue(Compose.subject.isShowing);
+        // sinon.assert.calledOnce(Compose.subject.toggle());
       });
 
       test('Draft without subject', function() {
         Compose.fromDraft(d2);
-        assert.isFalse(Compose.isSubjectShowing);
+        assert.isFalse(Compose.subject.isShowing);
       });
 
       test('Draft with attachment', function() {
@@ -632,7 +660,7 @@ suite('compose_test.js', function() {
       test('Message switches type when adding/removing subject',
         function() {
         expectType = 'mms';
-        Compose.toggleSubject();
+        Compose.subject.show();
         subject.value = 'foo';
         subject.dispatchEvent(new CustomEvent('input'));
         assert.equal(typeChange.called, 1);

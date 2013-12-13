@@ -392,15 +392,6 @@ var ThreadUI = global.ThreadUI = {
     }
   },
 
-  // Method for setting the body of a SMS/MMS from activity
-  setMessageBody: function thui_setMessageBody(value) {
-    Compose.clear();
-    if (value) {
-      Compose.append(value);
-    }
-    Compose.focus();
-  },
-
   messageComposerInputHandler: function thui_messageInputHandler(event) {
     this.updateSubjectHeight();
     this.updateElementsHeight();
@@ -436,12 +427,13 @@ var ThreadUI = global.ThreadUI = {
     Compose.updateType();
     // Handling user warning for max character reached
     // Only show the warning when the subject field has the focus
-    if (this.subjectInput.value.length === Compose.SUBJECT_MAX_LENGTH) {
+    if (this.subjectInput.value.length === Compose.subject.maxLength) {
       this.showMaxLengthNotice('messages-max-subject-length-text');
     } else {
       this.hideMaxLengthNotice();
     }
   },
+
   onSubjectBlur: function thui_onSubjectBlur() {
     this.hideMaxLengthNotice();
   },
@@ -1598,9 +1590,9 @@ var ThreadUI = global.ThreadUI = {
 
     // Subject management
     params.items.push({
-      l10nId: Compose.isSubjectShowing ? 'remove-subject' : 'add-subject',
+      l10nId: Compose.subject.isShowing ? 'remove-subject' : 'add-subject',
       method: function tSubject() {
-        Compose.toggleSubject();
+        Compose.subject.toggle();
         ThreadUI.updateSubjectHeight();
       }
     });
@@ -1960,7 +1952,7 @@ var ThreadUI = global.ThreadUI = {
     this.container.classList.remove('hide');
 
     var content = Compose.getContent();
-    var subject = Compose.getSubject();
+    var subject = Compose.subject;
     var messageType = Compose.type;
     var recipients;
 
@@ -2577,7 +2569,7 @@ var ThreadUI = global.ThreadUI = {
     var content, draft, recipients, subject, thread, threadId, type;
 
     content = Compose.getContent();
-    subject = Compose.getSubject();
+    subject = Compose.subject.getContent();
     type = Compose.type;
 
     // TODO Also store subject
