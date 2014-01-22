@@ -1,7 +1,7 @@
 /* -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- /
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
-/*global Settings, Utils, Attachment, AttachmentMenu, MozActivity */
+/*global Settings, Utils, Attachment, AttachmentMenu, MozActivity, SMIL */
 /*exported Compose */
 
 'use strict';
@@ -335,6 +335,13 @@ var Compose = (function() {
       return content;
     },
 
+    getSubject: function() {
+      return subject.getContent();
+    },
+
+    toggleSubject: function() {
+      subject.toggle();
+    },
     /** Render draft
      *
      * @param {Draft} draft Draft to be loaded into the composer.
@@ -351,7 +358,7 @@ var Compose = (function() {
 
       if (draft.subject) {
         dom.subject.value = draft.subject;
-        this.subject.toggle();
+        subject.toggle();
       }
 
       // draft content is an array
@@ -381,8 +388,8 @@ var Compose = (function() {
 
       if (message.type === 'mms') {
         if (message.subject) {
-          this.subject.setContent(message.subject);
-          this.subject.show();
+          subject.setContent(message.subject);
+          subject.show();
         }
         SMIL.parse(message, function(elements) {
           elements.forEach(function(element) {
@@ -683,33 +690,45 @@ var Compose = (function() {
     }
   });
 
-  Object.defineProperty(compose, 'subject', {
-    get: function() {
-      return {
-        get maxLength() {
-          return subject.getMaxLength();
-        },
-        get isShowing() {
-          return subject.isShowing;
-        },
-        getContent: function() {
-          return subject.getContent();
-        },
-        setContent: function(content) {
-          subject.setContent(content);
-        },
-        toggle: function() {
-          subject.toggle();
-        },
-        show: function() {
-          subject.show();
-        },
-        hide: function() {
-          subject.hide();
-        }
-      };
+  Object.defineProperty(compose, 'isSubjectVisible', {
+    get: function composeGetResizeState() {
+      return subject.isShowing;
     }
   });
+
+  Object.defineProperty(compose, 'subjectMaxLength', {
+    get: function composeGetResizeState() {
+      return subject.getMaxLength();
+    }
+  });
+
+  // Object.defineProperty(compose, 'subject', {
+  //   get: function() {
+  //     return {
+  //       get maxLength() {
+  //         return subject.getMaxLength();
+  //       },
+  //       get isShowing() {
+  //         return subject.isShowing;
+  //       },
+  //       getContent: function() {
+  //         return subject.getContent();
+  //       },
+  //       setContent: function(content) {
+  //         subject.setContent(content);
+  //       },
+  //       toggle: function() {
+  //         subject.toggle();
+  //       },
+  //       show: function() {
+  //         subject.show();
+  //       },
+  //       hide: function() {
+  //         subject.hide();
+  //       }
+  //     };
+  //   }
+  // });
 
   return compose;
 }());
