@@ -74,6 +74,10 @@ var Contacts = (function() {
       utils.extractParams(hasParams[1]) : -1;
 
     switch (sectionId) {
+      case 'view-contact-list':
+        initContactsList();
+        showApp();
+        break;
       case 'view-contact-details':
         initContactsList();
         initDetails(function onInitDetails() {
