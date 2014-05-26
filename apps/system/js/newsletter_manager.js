@@ -4,13 +4,16 @@
 
 var NewsletterManager = {
   start: function() {
+    console.log('> S > starting');
     LazyLoader.load('/shared/js/basket_client.js', function basketLoaded() {
       Basket.getDataStore().then(function gotDS(store) {
+        console.log('> S > getting item 1');
         store.get(1).then(function(itemRetrieved) {
           if (typeof itemRetrieved === 'undefined' || itemRetrieved.emailSent) {
             // either no item stored or it was already sent
             return;
           } else {
+            console.log('> S > trying to send');
             // try to send the email
             sendWhenOnline(itemRetrieved.newsletter_email);
           }
@@ -22,8 +25,10 @@ var NewsletterManager = {
   },
 
   sendNewsletter: function(emailAddress) {
+    console.log('> S > sending newsletter');
     LazyLoader.load('/shared/js/basket_client.js', function basketLoaded() {
       Basket.send(emailAddress, function itemSent(err, data) {
+        console.log('> S > sent');
         if (err) {
           console.error('Error sending data: ' + err);
           return;
@@ -36,6 +41,7 @@ var NewsletterManager = {
               'emailSent': true
             };
             store.put(newObj, 1);
+            console.log('> S > updated!');
           }).catch(function error(err) {
             console.error('Something went wrong: ' + err);
           });
@@ -48,9 +54,11 @@ var NewsletterManager = {
 function sendWhenOnline(email) {
   if (navigator.onLine) {
     // send it inmediately
+    console.log('> S > online, send');
     NewsletterManager.sendNewsletter(email);
   } else {
     // wait for connection
+    console.log('> S > offline, wait');
     window.addEventListener('online', function online() {
       window.removeEventListener('online', online);
       NewsletterManager.sendNewsletter(email);

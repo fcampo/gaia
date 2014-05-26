@@ -96,7 +96,8 @@ suite('Newsletter Manager >', function() {
   });
 
   suite('DataStore accessed >', function() {
-    var onlineListener;
+    var clock,
+        onlineListener;
     var email = {
       'newsletter_email': 'email@ser.er'
     };
@@ -105,80 +106,67 @@ suite('Newsletter Manager >', function() {
       this.sinon.spy(MockDatastore, 'get');
       this.sinon.spy(NewsletterManager, 'sendNewsletter');
       onlineListener = this.sinon.stub(window, 'addEventListener');
+      clock = sinon.useFakeTimers();
     });
 
     teardown(function() {
       MockDatastore.clear();
+      clock.restore();
     });
 
     test('Recovered email >', function(done) {
-      this.sinon.useFakeTimers();
       MockDatastore.add({
         'emailSent': true
       }, 1).then(function() {
         NewsletterManager.start();
-        this.sinon.clock.tick(100);
-        // setTimeout(function() {
-          sinon.assert.calledWith(MockDatastore.get, 1);
-          done();
-        // }, 10);
-      }, done);
+        clock.tick(1000);
+
+        sinon.assert.calledWith(MockDatastore.get, 1);
+      }).then(done, done);
     });
 
     test('Do not send if email already sent >', function(done) {
-      this.sinon.useFakeTimers();
       MockDatastore.add({
         'emailSent': true
       }, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(100);
-          sinon.assert.notCalled(NewsletterManager.sendNewsletter);
-          done();
-        // }, 10);
-      }, done);
+        clock.tick(100);
+
+        sinon.assert.notCalled(NewsletterManager.sendNewsletter);
+      }).then(done, done);
     });
 
     test('Send it if online >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = true;
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
-          sinon.assert.calledWith(NewsletterManager.sendNewsletter,
-                                email.newsletter_email);
-          done();
-        // }, 10);
-      }, done);
+        clock.tick(10);
+
+        sinon.assert.calledWith(NewsletterManager.sendNewsletter,
+                              email.newsletter_email);
+      }).then(done, done);
     });
 
     test('Wait for connection if offline >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = false;
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
-          sinon.assert.notCalled(NewsletterManager.sendNewsletter);
-          sinon.assert.called(window.addEventListener, 'online');
-          done();
-        // }, 10);
-      }, done);
+        clock.tick(10);
+
+        sinon.assert.notCalled(NewsletterManager.sendNewsletter);
+        sinon.assert.called(window.addEventListener, 'online');
+      }).then(done, done);
     });
 
     test('Online change triggers listener >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = false;
       onlineListener.yields();
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
-          sinon.assert.called(NewsletterManager.sendNewsletter);
-          done();
-        // }, 10);
-    }, done);
+        clock.tick(10);
+
+        sinon.assert.called(NewsletterManager.sendNewsletter);
+      }).then(done, done);
     });
 
     suite('Sending the info >', function() {
@@ -188,16 +176,11 @@ suite('Newsletter Manager >', function() {
 
       setup(function() {
         sinon.spy(MockDatastore, 'put');
-        this.sinon.useFakeTimers();
         NewsletterManager.sendNewsletter(email);
       });
 
-      test('Datastore updated when email sent >', function(done) {
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
-          sinon.assert.calledWith(MockDatastore.put, updatedEmail);
-          done();
-        // });
+      test('Datastore updated when email sent >', function() {
+        sinon.assert.calledWith(MockDatastore.put, updatedEmail);
       });
     });
   });

@@ -80,16 +80,19 @@ var Basket = {
   },
 
   getDataStore: function() {
+    console.log('> B > getting datastore');
     var self = this;
     return new Promise(function (resolve, reject) {
       navigator.getDataStores(self.DATASTORE_NAME).then(function(stores) {
         // check it's not empty
         if (!stores.length) {
+          console.log('> B > error');
           reject(new Error('DataStore not loaded'));
         } else {
           var dataStore = stores[0];
           // check ownership of the DS
           if (dataStore.owner === 'app://ftu.gaiamobile.org/manifest.webapp') {
+            console.log('> B > got it');
             resolve(dataStore);
           } else {
             reject(new Error('Wrong DataStore'));
