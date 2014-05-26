@@ -112,73 +112,63 @@ suite('Newsletter Manager >', function() {
     });
 
     test('Recovered email >', function(done) {
-      this.sinon.useFakeTimers();
       MockDatastore.add({
         'emailSent': true
       }, 1).then(function() {
         NewsletterManager.start();
-        this.sinon.clock.tick(100);
-        // setTimeout(function() {
+        setTimeout(function() {
           sinon.assert.calledWith(MockDatastore.get, 1);
           done();
-        // }, 10);
-      }, done);
+        }, 10);
+      });
     });
 
     test('Do not send if email already sent >', function(done) {
-      this.sinon.useFakeTimers();
       MockDatastore.add({
         'emailSent': true
       }, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(100);
+        setTimeout(function() {
           sinon.assert.notCalled(NewsletterManager.sendNewsletter);
           done();
-        // }, 10);
-      }, done);
+        }, 10);
+      });
     });
 
     test('Send it if online >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = true;
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
+        setTimeout(function() {
           sinon.assert.calledWith(NewsletterManager.sendNewsletter,
                                 email.newsletter_email);
           done();
-        // }, 10);
-      }, done);
+        }, 10);
+      });
     });
 
     test('Wait for connection if offline >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = false;
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
+        setTimeout(function() {
           sinon.assert.notCalled(NewsletterManager.sendNewsletter);
           sinon.assert.called(window.addEventListener, 'online');
           done();
-        // }, 10);
-      }, done);
+        }, 10);
+      });
     });
 
     test('Online change triggers listener >', function(done) {
-      this.sinon.useFakeTimers();
       navigator.onLine = false;
       onlineListener.yields();
       MockDatastore.add(email, 1).then(function() {
         NewsletterManager.start();
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
+        setTimeout(function() {
           sinon.assert.called(NewsletterManager.sendNewsletter);
           done();
-        // }, 10);
-    }, done);
+        }, 10);
+      });
     });
 
     suite('Sending the info >', function() {
@@ -188,16 +178,14 @@ suite('Newsletter Manager >', function() {
 
       setup(function() {
         sinon.spy(MockDatastore, 'put');
-        this.sinon.useFakeTimers();
         NewsletterManager.sendNewsletter(email);
       });
 
       test('Datastore updated when email sent >', function(done) {
-        // setTimeout(function() {
-          this.sinon.clock.tick(10);
+        setTimeout(function() {
           sinon.assert.calledWith(MockDatastore.put, updatedEmail);
           done();
-        // });
+        });
       });
     });
   });
