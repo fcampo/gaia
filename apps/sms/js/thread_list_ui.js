@@ -4,7 +4,7 @@
 /*global Template, Utils, Threads, Contacts, Threads,
          WaitingScreen, MozSmsFilter, MessageManager, TimeHeaders,
          Drafts, Thread, ThreadUI, OptionMenu, ActivityPicker,
-         PerformanceTestingHelper, StickyHeader, Navigation */
+         PerformanceTestingHelper, StickyHeader, Navigation, Dialog */
 /*exported ThreadListUI */
 (function(exports) {
 'use strict';
@@ -306,8 +306,8 @@ var ThreadListUI = {
   },
 
   delete: function thlui_delete() {
-    var question = navigator.mozL10n.get('deleteThreads-confirmation2');
     var list, length, id, threadId, filter, count;
+    var self = this;
 
     function checkDone(threadId) {
       /* jshint validthis: true */
@@ -317,13 +317,13 @@ var ThreadListUI = {
       Threads.delete(threadId);
 
       // Cleanup the DOM
-      this.removeThread(threadId);
+      self.removeThread(threadId);
 
       // Remove notification if exist
       Utils.closeNotificationsForThread(threadId);
 
       if (--count === 0) {
-        this.cancelEdit();
+        self.cancelEdit();
         Drafts.store();
         WaitingScreen.hide();
       }
@@ -334,10 +334,10 @@ var ThreadListUI = {
       return true;
     }
 
-    if (confirm(question)) {
+    function performDeletion() {
       WaitingScreen.show();
 
-      list = this.selectedInputs.reduce(function(list, input) {
+      list = self.selectedInputs.reduce(function(list, input) {
         list[input.dataset.mode].push(+input.value);
         return list;
       }, { drafts: [], threads: [] });
@@ -348,7 +348,7 @@ var ThreadListUI = {
         for (var i = 0; i < length; i++) {
           id = list.drafts[i];
           Drafts.delete(Drafts.get(id));
-          this.removeThread(id);
+          self.removeThread(id);
         }
 
         Drafts.store();
@@ -357,7 +357,7 @@ var ThreadListUI = {
         // reset and restore the UI from edit mode and
         // exit immediately.
         if (list.threads.length === 0) {
-          this.cancelEdit();
+          self.cancelEdit();
           WaitingScreen.hide();
           return;
         }
@@ -378,10 +378,36 @@ var ThreadListUI = {
           filter: filter,
           invert: true,
           each: deleteMessage,
-          end: checkDone.bind(this, threadId)
+          end: checkDone.bind(self, threadId)
         });
       }
     }
+
+    var dialog = new Dialog({
+      title: {
+        l10nId: 'messages'
+      },
+      body: {
+        l10nId: 'deleteThreads-confirmation2'
+      },
+      options: {
+        cancel: {
+          text: {
+            l10nId: 'cancel'
+          },
+          method: function() {} // needs to exist for testing
+        },
+        confirm: {
+          text: {
+            l10nId: 'delete'
+          },
+          method: performDeletion,
+          className: 'danger'
+        }
+      }
+    });
+
+    dialog.show();
   },
 
   setEmpty: function thlui_setEmpty(empty) {

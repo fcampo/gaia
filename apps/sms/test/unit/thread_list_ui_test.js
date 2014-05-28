@@ -1,7 +1,7 @@
 /*global mocha, MocksHelper, loadBodyHTML, MockL10n, ThreadListUI,
          MessageManager, WaitingScreen, Threads, Template, MockMessages,
          MockThreadList, MockTimeHeaders, Draft, Drafts, Thread, ThreadUI,
-         MockOptionMenu, Utils, Contacts, MockContact, Navigation
+         MockOptionMenu, Utils, Contacts, MockContact, Navigation, MockDialog
          */
 
 'use strict';
@@ -24,6 +24,7 @@ requireApp('sms/test/unit/mock_l10n.js');
 requireApp('sms/test/unit/mock_message_manager.js');
 requireApp('sms/test/unit/mock_messages.js');
 requireApp('sms/test/unit/mock_utils.js');
+requireApp('sms/test/unit/mock_dialog.js');
 requireApp('sms/test/unit/mock_waiting_screen.js');
 require('/shared/test/unit/mocks/mock_contact_photo_helper.js');
 require('/test/unit/thread_list_mockup.js');
@@ -39,6 +40,7 @@ var mocksHelperForThreadListUI = new MocksHelper([
   'Contacts',
   'MessageManager',
   'Utils',
+  'Dialog',
   'WaitingScreen',
   'TimeHeaders',
   'ThreadUI',
@@ -576,29 +578,39 @@ suite('thread_list_ui', function() {
       }.bind(this));
       this.sinon.stub(MessageManager, 'getMessages');
     });
-    suite('confirm false', function() {
+    suite('cancel deletion', function() {
       setup(function() {
-        this.sinon.stub(window, 'confirm').returns(false);
         ThreadListUI.delete();
+        MockDialog.triggers.cancel();
       });
-      test('called confirm with proper message', function() {
-        assert.deepEqual(window.confirm.args[0],
-          ['deleteThreads-confirmation2']);
+      test('called Dialog with proper message', function() {
+        assert.isTrue(MockDialog.prototype.show.called);
+        assert.deepEqual(MockDialog.calls[0].body.l10nId,
+                        'deleteThreads-confirmation2');
+      });
+      test('dialog cancelled', function() {
+        assert.isFalse(MockDialog.triggers.confirm.called);
+        assert.ok(MockDialog.triggers.cancel.called);
       });
     });
     suite('confirm true', function() {
       setup(function() {
         this.sinon.stub(WaitingScreen, 'show');
         this.sinon.stub(WaitingScreen, 'hide');
-        this.sinon.stub(window, 'confirm').returns(true);
         ThreadListUI.delete();
+        MockDialog.triggers.confirm();
       });
       test('shows WaitingScreen', function() {
         assert.ok(WaitingScreen.show.called);
       });
-      test('called confirm with proper message', function() {
-        assert.deepEqual(window.confirm.args[0],
-          ['deleteThreads-confirmation2']);
+      test('called dialog with proper message', function() {
+        assert.isTrue(MockDialog.prototype.show.called);
+        assert.deepEqual(MockDialog.calls[0].body.l10nId,
+                        'deleteThreads-confirmation2');
+      });
+      test('dialog confirmed', function() {
+        assert.ok(MockDialog.triggers.confirm.called);
+        assert.isFalse(MockDialog.triggers.cancel.called);
       });
       test('called MessageManager.getMessages twice', function() {
         assert.equal(MessageManager.getMessages.args.length, 2);
