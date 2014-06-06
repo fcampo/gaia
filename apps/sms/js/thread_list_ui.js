@@ -4,7 +4,7 @@
 /*global Template, Utils, Threads, Contacts, Threads,
          WaitingScreen, MozSmsFilter, MessageManager, TimeHeaders,
          Drafts, Thread, ThreadUI, OptionMenu, ActivityPicker,
-         PerformanceTestingHelper, StickyHeader, Navigation, Dialog */
+         PerformanceTestingHelper, StickyHeader, Navigation */
 /*exported ThreadListUI */
 (function(exports) {
 'use strict';
@@ -383,31 +383,26 @@ var ThreadListUI = {
       }
     }
 
-    var dialog = new Dialog({
-      title: {
-        l10nId: 'messages'
-      },
-      body: {
-        l10nId: 'deleteThreads-confirmation2'
-      },
-      options: {
-        cancel: {
-          text: {
-            l10nId: 'cancel'
-          },
-          method: function() {} // needs to exist for testing
-        },
-        confirm: {
-          text: {
-            l10nId: 'delete'
-          },
-          method: performDeletion,
-          className: 'danger'
-        }
-      }
+    var confirm = document.getElementById('confirm-dialog'),
+        cancelBtn = document.getElementById('confirm-dialog-cancel-button'),
+        confirmBtn = document.getElementById('confirm-dialog-confirm-button'),
+        confirmMsg = document.getElementById('confirm-dialog-message');
+
+    function hideConfirm() {
+      confirm.classList.remove('show');
+    }
+    function showConfirm() {
+      confirm.classList.add('show');
+    }
+
+    navigator.mozL10n.localize(confirmMsg, 'deleteThreads-confirmation2');
+    cancelBtn.addEventListener('click', hideConfirm);
+    confirmBtn.addEventListener('click', function confirmDeletion() {
+      hideConfirm();
+      performDeletion();
     });
 
-    dialog.show();
+    showConfirm();
   },
 
   setEmpty: function thlui_setEmpty(empty) {

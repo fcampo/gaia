@@ -581,6 +581,16 @@ section[role="region"].new > header:first-child form {
 }
 
 /*
+  Confirm Screen for deletion
+*/
+#confirm-dialog {
+  display: none;
+}
+
+#confirm-dialog.show {
+  display: block;
+}
+/*
   Loading screen while deleting
 */
 
