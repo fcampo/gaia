@@ -11,7 +11,7 @@
   padding-left: 5.5rem;
 }
 
-a.menu-item:after  {
+a.menu-item:after {
   font-family: "gaia-icons";
   content: "forward-light";
   position: absolute;
