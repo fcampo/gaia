@@ -59,10 +59,12 @@
       </header>
       <ul id="list-callBarring-passcode">
         <li id="li-cb-pswd">
-          <a class="bb-button" data-href="#call-cb-passcode" data-l10n-id="callBarring-change-passcode">Change passcode</a>
+          <a class="bb-button" data-href="#call-barring-passcode-change" data-l10n-id="callBarring-change-passcode">Change passcode</a>
         </li>
       </ul>
     </div>
+
+    <panel data-path="panels/call_barring/panel"></panel>
 
     <form data-type="confirm" role="dialog" id="cb-passcode" hidden>
       <input type="number" x-inputmode="digit" class="passcode-input" />
@@ -83,8 +85,6 @@
         <button id="cb-passcode-ok-btn" data-l10n-id="ok" class="recommend" disabled>OK</button>
       </menu>
     </form>
-
-    <script src="js/call_cb_passcode.js"></script>
 
   </template>
 </element>

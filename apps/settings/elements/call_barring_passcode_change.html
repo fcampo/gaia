@@ -1,4 +1,4 @@
-<element name="call-cb-passcode" extends="section">
+<element name="call-barring-passcode-change" extends="section">
   <template>
 
     <gaia-header action="back" data-href="#call-cbSettings">
@@ -25,10 +25,11 @@
           <span class="passcode-digit"></span>
           <span class="passcode-digit"></span>
         </div>
-        <div class="passcode-error" data-l10n-id="callBarring-passcode-error-incorrect" data-type="incorrect">Passcode is incorrect</div>
-        <div class="passcode-error" data-l10n-id="callBarring-passcode-error-match" data-type="mismatch">Passcode doesn't match. Try again!</div>
+        <div class="passcode-error" data-l10n-id="callBarring-passcode-error-incorrect">Error on Passcode</div>
       </div>
     </div>
+
+    <panel data-path="panels/call_barring_passcode_change/panel"></panel>
 
   </template>
 </element>
