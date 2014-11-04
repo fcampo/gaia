@@ -328,6 +328,17 @@ require.config({
         'modules/bluetooth/bluetooth_v1',
         'modules/bluetooth/bluetooth'
       ]
+    },
+    {
+      name: 'panels/call_barring/panel',
+      exclude: [
+        'main',
+        'modules/mvvm/observable'
+      ]
+    },
+    {
+      name: 'panels/call_barring_passcode_change/panel',
+      exclude: ['main']
     }
   ]
 });

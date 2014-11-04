@@ -515,7 +515,7 @@ section ul.operate-certificate {
   * copied from panels/screen_lock_passcode
   * this should dissapear if we unify both screens
   */
-#call-cb-passcode .passcode-error {
+#call-barring-passcode-change .passcode-error {
   clear: both;
   display: none;
   height: 4.2rem;
@@ -525,11 +525,7 @@ section ul.operate-certificate {
   line-height: 4.2rem;
 }
 
-#call-cb-passcode[data-passcode-status="error"][data-mode="edit"] div.passcode-error[data-type="incorrect"] {
-  display: block;
-}
-
-#call-cb-passcode[data-passcode-status="error"][data-mode="new"] div.passcode-error[data-type="mismatch"] {
+#call-barring-passcode-change[data-passcode-status="error"] .passcode-error {
   display: block;
 }
 
@@ -538,7 +534,7 @@ section ul.operate-certificate {
   position: relative;
 }
 
-#call-cb-passcode label {
+#call-barring-passcode-change label {
   -moz-box-sizing: border-box;
   display: block;
   width: auto;
@@ -556,18 +552,18 @@ section ul.operate-certificate {
  *    can drop the <style scoped> and this
  *    !important won't be needed anymore.
  */
-#call-cb-passcode [data-mode] {
+#call-barring-passcode-change [data-mode] {
   display: none !important; /* 1 */
 }
-#call-cb-passcode[data-mode="edit"]    [data-mode*="edit"],
-#call-cb-passcode[data-mode="new"]     [data-mode*="new"] {
+#call-barring-passcode-change[data-mode="edit"]    [data-mode*="edit"],
+#call-barring-passcode-change[data-mode="new"]     [data-mode*="new"] {
   display: block !important; /* 1 */
 }
-#call-cb-passcode #passcode-confirm {
+#call-barring-passcode-change #passcode-confirm {
   opacity: 0.3;
   pointer-events: none;
 }
-#call-cb-passcode[data-passcode-status="success"] #passcode-confirm {
+#call-barring-passcode-change[data-passcode-status="success"] #passcode-confirm {
   opacity: 1;
   pointer-events: auto;
 }
