@@ -64,27 +64,34 @@ define(function(require) {
       input.addEventListener('keypress', _getInputKey);
     }
 
+    function okClicked() {
+      if (_passcodeBuffer.length === 4) {
+        var password = _passcodeBuffer;
+        _closePanel();
+        this.resolve(password);
+      }
+    }
+
+    function cancelClicked() {
+      _closePanel();
+      this.reject();
+    }
+
     function _showPanel() {
       return new Promise(function showing(resolve, reject) {
         panel.hidden = false;
         input.focus();
-        btnOK.addEventListener('click', function okClicked() {
-          btnOK.removeEventListener('click', okClicked);
-          if (_passcodeBuffer.length === 4) {
-            var password = _passcodeBuffer;
-            _closePanel();
-            resolve(password);
-          }
-        });
-        btnCancel.addEventListener('click', function cancelClicked() {
-          btnCancel.removeEventListener('click', cancelClicked);
-          _closePanel();
-          reject();
-        });
+        this.resolve = resolve;
+        this.reject = reject;
+
+        btnOK.addEventListener('click', okClicked.bind(this));
+        btnCancel.addEventListener('click', cancelClicked.bind(this));
       });
     }
 
     function _closePanel() {
+      btnOK.removeEventListener('click', okClicked);
+      btnCancel.removeEventListener('click', cancelClicked);
       _passcodeBuffer = '';
       _updateUI();
       panel.hidden = true;

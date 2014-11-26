@@ -11,12 +11,24 @@ suite('CallBarringPanel', function() {
   var map = {
     '*': {
       'modules/settings_panel': 'MockSettingsPanel',
-      'panels/call_barring/call_barring': 'MockCallBarring'
+      'panels/call_barring/call_barring': 'MockCallBarring',
+      'panels/call_barring/cb_passcode_dialog': 'MockPasscode'
     }
   };
 
   var realDsdsSettings,
       realMozMobileConnections;
+
+  var _mobileConnection,
+      _serviceClass;
+
+  var _cbServiceMapper = {
+    'li-cb-baoc': 0,
+    'li-cb-boic': 1,
+    'li-cb-boic-exhc': 2,
+    'li-cb-baic': 3,
+    'li-cb-baic-r': 4
+  };
 
   suiteSetup(function() {
     realDsdsSettings = window.DsdsSettings;
@@ -29,6 +41,8 @@ suite('CallBarringPanel', function() {
     realMozMobileConnections = navigator.mozMobileConnections;
     navigator.mozMobileConnections = MockNavigatorMozMobileConnections;
 
+    _mobileConnection = MockNavigatorMozMobileConnections[0];
+    _serviceClass = _mobileConnection.ICC_SERVICE_CLASS_VOICE;
   });
 
   setup(function(done) {
@@ -45,19 +59,34 @@ suite('CallBarringPanel', function() {
           init: options.onInit,
           beforeShow: options.onBeforeShow,
           show: options.onShow,
-          hide: options.onHide
+          beforeHide: options.onBeforeHide
         };
       };
     });
 
     // Define MockCallBarring
     this.mockCallBarring = {
-      init: function() {},
-      refresh: function() {}
+      getRequest: function() {
+        return new Promise(function (res, rej) {
+          res();
+        });
+      },
+      setRequest: function() {}
     };
     define('MockCallBarring', function() {
       return function() {
         return that.mockCallBarring;
+      };
+    });
+
+    // Define MockPasscode
+    this.mockPasscode = {
+      init: function() {},
+      show: function() {}
+    };
+    define('MockPasscode', function() {
+      return function() {
+        return that.mockPasscode;
       };
     });
 
@@ -72,15 +101,10 @@ suite('CallBarringPanel', function() {
     navigator.mozMobileConnections = realMozMobileConnections;
   });
 
-  test('init display module with correct data', function() {
-    var initObject = {
-      'mobileConnection': MockNavigatorMozMobileConnections[0],
-      'voiceServiceClassMask':
-        MockNavigatorMozMobileConnections[0].ICC_SERVICE_CLASS_VOICE
-    };
-    this.sinon.stub(this.mockCallBarring, 'init');
+  test('panel starts passcode on init', function() {
+    this.sinon.stub(this.mockPasscode, 'init');
     this.panel.init(document.body);
-    assert.ok(this.mockCallBarring.init.calledWith(initObject));
+    assert.isTrue(this.mockPasscode.init.calledOnce);
   });
 
   test('listen to panelready before showing', function() {
@@ -88,13 +112,28 @@ suite('CallBarringPanel', function() {
     this.panel.init(document.body);
     this.panel.beforeShow(document.body);
     assert.isTrue(window.addEventListener.calledWith('panelready'));
-
   });
 
   test('stop listening when hiding', function() {
     this.sinon.stub(window, 'removeEventListener');
     this.panel.init(document.body);
-    this.panel.hide(document.body);
+    this.panel.beforeHide(document.body);
     assert.isTrue(window.removeEventListener.calledWith('panelready'));
+  });
+
+  test('request updated data for UI on show', function(done) {
+    this.sinon.stub(this.mockCallBarring, 'getRequest')
+      .returns(Promise.resolve('false'));
+
+    this.panel.init(document.body);
+    this.panel.beforeShow(document.body);
+    this.panel.show(document.body);
+
+    setTimeout(function() {
+      sinon.assert.alwaysCalledWith(this.mockCallBarring.getRequest,
+      _mobileConnection);
+      sinon.assert.callCount(this.mockCallBarring.getRequest, 5);
+      done();
+    }.bind(this));
   });
 });

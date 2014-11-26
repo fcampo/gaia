@@ -1,4 +1,4 @@
-/* global DsdsSettings */
+
 
 define(function(require) {
   'use strict';
@@ -6,35 +6,15 @@ define(function(require) {
   var SettingsPanel = require('modules/settings_panel');
   var CallBarring = require('panels/call_barring/call_barring');
   var InputPasscodeScreen = require('panels/call_barring/cb_passcode_dialog');
-  var Toaster = require('shared/toaster');
 
   return function ctor_call_barring() {
     var _callBarring = CallBarring();
     var _passcodeScreen = InputPasscodeScreen();
 
-    var _cbAction = {
-      CALL_BARRING_BAOC: 0,     // BAOC: Barring All Outgoing Calls
-      CALL_BARRING_BOIC: 1,     // BOIC: Barring Outgoing International Calls
-      CALL_BARRING_BOICexHC: 2, // BOICexHC: Barring Outgoing International
-                                //           Calls Except  to Home Country
-      CALL_BARRING_BAIC: 3,     // BAIC: Barring All Incoming Calls
-      CALL_BARRING_BAICr: 4     // BAICr: Barring All Incoming Calls in Roaming
-    };
+    var _cbSettings = {};
 
-    var _cbServiceMapper = {
-      'li-cb-baoc': _cbAction.CALL_BARRING_BAOC,
-      'li-cb-boic': _cbAction.CALL_BARRING_BOIC,
-      'li-cb-boic-exhc': _cbAction.CALL_BARRING_BOICexHC,
-      'li-cb-baic': _cbAction.CALL_BARRING_BAIC,
-      'li-cb-baic-r': _cbAction.CALL_BARRING_BAICr
-    };
-
-    var _mobileConnection = null,
-        _voiceServiceClassMask = null;
-
-    var cbSettings = {};
-
-    var refresh;
+    var _refresh;
+    var _updating;
 
     function refresh_on_load(e) {
       // Refresh when:
@@ -44,10 +24,9 @@ define(function(require) {
       //  - we come back from changing the password
       if (e.detail.current === '#call-cbSettings' &&
           e.detail.previous === '#call-barring-passcode-change') {
-            refresh = false;
+            _refresh = false;
       }
     }
-
 
     /**
      * Updates a Call Barring item with a new status.
@@ -80,163 +59,13 @@ define(function(require) {
       }
 
       // update the description
-      var text = newStatus.message;
-      if (!text) {
-        text = input && input.checked ? 'enabled' : 'disabled';
+      function inputValue() {
+        return input && input.checked ? 'enabled' : 'disabled';
       }
       if (descText) {
+        var text = _updating ? 'callSettingsQuery' : inputValue();
         navigator.mozL10n.setAttributes(descText, text);
       }
-    }
-
-    /**
-     * Enable all the elements of the Call Barring screen.
-     * @param description Message to show after enabling.
-     * @param callback In case it's needed to know when the process ends.
-     */
-    function _enableAllCallBarring(description, callback) {
-      [].forEach.call(
-        document.querySelectorAll('#call-cbSettings li'),
-        function enable(item) {
-          var newStatus = {
-            'disabled': false,
-            'message': description
-          };
-          _updateCallBarringItem(item, newStatus);
-        }
-      );
-
-      // When barring All Outgoing, disable the rest of outgoing services
-      if (cbSettings.baoc.querySelector('input').checked) {
-        _updateCallBarringItem(cbSettings.boic, {'disabled': true});
-        _updateCallBarringItem(cbSettings.boicExhc, {'disabled': true});
-      }
-      // When barring All Incoming, disable the rest of incoming services
-      if (cbSettings.baic.querySelector('input').checked) {
-        _updateCallBarringItem(cbSettings.baicR, {'disabled': true});
-      }
-
-      if (typeof callback === 'function') {
-        callback();
-      }
-    }
-
-    /**
-     * Disable all the elements of the Call Barring screen.
-     * @param description Message to show while disabled.
-     * @param callback In case it's needed to know when the process ends.
-     */
-    function _disableAllCallBarring(description, callback) {
-      [].forEach.call(
-        document.querySelectorAll('#call-cbSettings li'),
-        function disable(item) {
-          var newStatus = {
-            'disabled': true,
-            'message': description
-          };
-          _updateCallBarringItem(item, newStatus);
-        }
-      );
-      if (typeof callback === 'function') {
-        callback();
-      }
-    }
-
-    /**
-     * Makes a request to the RIL to change the current state of a specific
-     * call barring option.
-     * @param id of the service we want to update
-     * @param options Object with the details of the new state
-     * {
-     *   'program':      // id of the service to update
-     *   'enabled':      // new state for the service
-     *   'password':     // password introduced by the user
-     *   'serviceClass': // type of RIL service (voice in this case)
-     * }
-     */
-    function _setCallBarring(id, options) {
-      // disable tap on all inputs while we deal with server
-      _disableAllCallBarring('callSettingsQuery');
-
-      _callBarring.setRequest(_mobileConnection, options)
-      .catch(function error(requestError) {
-        /* requestError = { name, message } */
-        // revert visual changes
-        _updateCallBarringItem(document.getElementById(id),
-                               {'checked': !options.enabled});
-        var toast = {
-          messageL10nId: 'callBarring-update-item-error',
-          messageL10nArgs: {'error': requestError.name},
-          latency: 3000,
-          useTransition: true
-        };
-        Toaster.showToast(toast);
-      }).then(function doAnyways() {
-        _enableAllCallBarring();
-      });
-    }
-
-    /**
-     * Makes a request to the RIL for the current state of a specific
-     * call barring option.
-     * @param id of the service we want to request the state of
-     * @returns result of the request as a Promise
-     */
-    function _getCallBarring(id) {
-      var options = {
-        'program': _cbServiceMapper[id],
-        'serviceClass': _voiceServiceClassMask
-      };
-
-      return _callBarring.getRequest(_mobileConnection, options);
-    }
-
-    /**
-     * Update the state of all the Call Barring subpanels
-     */
-    function _updateCallBarringSubpanels(callback) {
-      var error = null;
-      // disable all, change description to 'requesting network info'
-      _disableAllCallBarring('callSettingsQuery');
-
-      // make the request for each one
-      var cbOptions = [];
-      var currentID = '';
-
-      currentID = 'li-cb-baoc';
-      _getCallBarring(currentID).then(function gotValue(value) {
-        cbOptions.push({'id': currentID, 'checked': value});
-        currentID = 'li-cb-boic';
-        return _getCallBarring(currentID);
-      }).then(function gotValue(value) {
-        cbOptions.push({'id': currentID, 'checked': value});
-        currentID = 'li-cb-boic-exhc';
-        return _getCallBarring(currentID);
-      }).then(function gotValue(value) {
-        cbOptions.push({'id': currentID, 'checked': value});
-        currentID = 'li-cb-baic';
-        return _getCallBarring(currentID);
-      }).then(function gotValue(value) {
-        cbOptions.push({'id': currentID, 'checked': value});
-        currentID = 'li-cb-baic-r';
-        return _getCallBarring(currentID);
-      }).then(function gotValue(value) {
-        cbOptions.push({'id': currentID, 'checked': value});
-        // update each with the values received
-        cbOptions.forEach(function updateItem(listItem) {
-          var item = document.getElementById(listItem.id);
-          _updateCallBarringItem(item, {'checked': listItem.checked});
-        });
-      }).catch(function errorWhileProcessing(err) {
-        error = err;
-      }).then(function afterEverythingDone() {
-        _enableAllCallBarring(null, function finished() {
-          if (typeof callback === 'function') {
-            callback(error);
-          }
-        });
-      });
-
     }
 
     /**
@@ -246,84 +75,101 @@ define(function(require) {
     function _callBarringClick(evt) {
       var input = evt.target;
 
-      // Show password screen
-      _passcodeScreen.show().then(
-        // password screen confirmed
-        function confirmed(password) {
-          var inputID = input.parentNode.parentNode.id;
-          // Create the options object
-          var options = {
-            'program': _cbServiceMapper[inputID],
-            'enabled': input.checked,
-            'password': password,
-            'serviceClass': _voiceServiceClassMask
-          };
+      // do not change the UI, let it be managed by the data model
+      evt.preventDefault();
+      // Show passcode screen
+      _passcodeScreen.show().then(function confirmed(passcode) {
+        // passcode screen confirmed
+        var inputID = input.parentNode.parentNode.id;
 
-          _setCallBarring(inputID, options);
-        },
-        // password screen canceled
-        function canceled() {
-          // revert visual changes
-          input.checked = !input.checked;
-        }
-      );
+        _callBarring.set(inputID, passcode);
+      }).catch(function canceled() {
+        // passcode screen canceled
+      });
     }
 
     return SettingsPanel({
       onInit: function cb_onInit(panel) {
-        console.log('> on init');
-        _mobileConnection = window.navigator.mozMobileConnections[
-          DsdsSettings.getIccCardIndexForCallSettings()
-        ];
-        _voiceServiceClassMask = _mobileConnection.ICC_SERVICE_CLASS_VOICE;
-
-        cbSettings = {
+        _cbSettings = {
           baoc: document.getElementById('li-cb-baoc'),
           boic: document.getElementById('li-cb-boic'),
-          boicExhc: document.getElementById('li-cb-boic-exhc'),
+          boicExhc: document.getElementById('li-cb-boicExhc'),
           baic: document.getElementById('li-cb-baic'),
-          baicR: document.getElementById('li-cb-baic-r')
+          baicR: document.getElementById('li-cb-baicR')
         };
 
-        for (var i in cbSettings) {
-          cbSettings[i].querySelector('input').
-            addEventListener('change', _callBarringClick);
+        for (var i in _cbSettings) {
+          _cbSettings[i].querySelector('input').
+            addEventListener('click', _callBarringClick);
         }
 
         _passcodeScreen.init();
       },
 
       onBeforeShow: function cb_onBeforeShow() {
-        console.log('> on beforeshow');
-        refresh = true;
+        _refresh = true;
+        _updating = false;
+
         window.addEventListener('panelready', refresh_on_load);
-        ///////// observe and react on change?
-        // cbSettings.forEach(function(setting) {
-        //   _callBarring.observe(setting, function(newValue) {
-        //   });
-        // });
+
+        // Changes on settings value
+        _callBarring.observe('baoc', function(newValue) {
+          _updateCallBarringItem(_cbSettings.baoc, {'checked': newValue});
+        });
+        _callBarring.observe('boic', function(newValue) {
+          _updateCallBarringItem(_cbSettings.boic, {'checked': newValue});
+        });
+        _callBarring.observe('boicExhc', function(newValue) {
+          _updateCallBarringItem(_cbSettings.boicExhc, {'checked': newValue});
+        });
+        _callBarring.observe('baic', function(newValue) {
+          _updateCallBarringItem(_cbSettings.baic, {'checked': newValue});
+        });
+        _callBarring.observe('baicR', function(newValue) {
+          _updateCallBarringItem(_cbSettings.baicR, {'checked': newValue});
+        });
+
+        // Changes on settings availability
+        _callBarring.observe('baoc_enabled', function changed(newValue) {
+          _updateCallBarringItem(_cbSettings.baoc, {'disabled': !newValue});
+        });
+        _callBarring.observe('boic_enabled', function changed(newValue) {
+          _updateCallBarringItem(_cbSettings.boic, {'disabled': !newValue});
+        });
+        _callBarring.observe('boicExhc_enabled', function changed(newValue) {
+          _updateCallBarringItem(_cbSettings.boicExhc, {'disabled': !newValue});
+        });
+        _callBarring.observe('baic_enabled', function changed(newValue) {
+          _updateCallBarringItem(_cbSettings.baic, {'disabled': !newValue});
+        });
+        _callBarring.observe('baicR_enabled', function changed(newValue) {
+          _updateCallBarringItem(_cbSettings.baicR, {'disabled': !newValue});
+        });
+
+        _callBarring.observe('updating', function changed(newValue) {
+          _updating = newValue;
+        });
       },
 
       onShow: function cb_onShow() {
-        console.log('> on show');
-        if (refresh) {
-          // _callBarring.refresh();
-          _updateCallBarringSubpanels();
+        if (_refresh) {
+          _callBarring.getAll();
         }
       },
 
-      onBeforeHide: function dp_onBeforeHide() {
-        console.log('> on beforehide');
-        /////////// unobserve
-        // cbSettings.forEach(function(setting) {
-        //   _callBarring.unobserve(setting, function(newValue) {
-        //   });
-        // });
-      },
-
-      onHide: function cb_onHide() {
-        console.log('> on hide');
+      onBeforeHide: function cb_onHide() {
         window.removeEventListener('panelready', refresh_on_load);
+        _callBarring.unobserve('baoc');
+        _callBarring.unobserve('boic');
+        _callBarring.unobserve('boicExhc');
+        _callBarring.unobserve('baic');
+        _callBarring.unobserve('baicR');
+
+        _callBarring.unobserve('baoc_enabled');
+        _callBarring.unobserve('boic_enabled');
+        _callBarring.unobserve('boicExhc_enabled');
+        _callBarring.unobserve('baic_enabled');
+        _callBarring.unobserve('baicR_enabled');
       }
 
     });

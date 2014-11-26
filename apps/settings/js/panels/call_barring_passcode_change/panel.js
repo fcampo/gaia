@@ -7,7 +7,6 @@ define(function(require) {
   var SettingsPanel = require('modules/settings_panel');
   var ChangePasscodeScreen =
     require('panels/call_barring_passcode_change/call_barring_passcode_change');
-  var Toaster = require('shared/toaster');
 
   return function ctor_call_barring_passcode_change() {
     var passcodeChange = ChangePasscodeScreen();
@@ -51,7 +50,7 @@ define(function(require) {
       }
 
       var key = String.fromCharCode(code);
-      if (evt.charCode === 0) { // delete
+      if (code === 0) { // delete
         if (_passcodeBuffer.length > 0) {
           _passcodeBuffer = _passcodeBuffer.substring(0,
             _passcodeBuffer.length - 1);
@@ -141,35 +140,24 @@ define(function(require) {
      * Triggers the passcode change screen
      */
     function _changePassword() {
-
-      //TODO open spinner
       passcodeChange.change(_mobileConnection, _settings)
       .then(function success() {
-        // password changed correctly
-        var toast = {
-          messageL10nId: 'callBarring-change-passcode-success',
-          latency: 2000,
-          useTransition: true
-        };
-        Toaster.showToast(toast);
-        // and exit
+        // exit
         SettingsService.back();
       }).catch(function error(err) {
         // back to first screen
         _passcodeBuffer = '';
         _updatePassCodeUI();
         _changeMode('edit');
+
         // show error
         _showErrorMessage('incorrect');
-      }).then(function doAnyways() {
-        //TODO close spinner
       });
 
     }
 
     return SettingsPanel({
       onInit: function cb_onInit(panel) {
-        console.log('> on init');
         _mobileConnection = window.navigator.mozMobileConnections[
           DsdsSettings.getIccCardIndexForCallSettings()
         ];
@@ -203,12 +191,10 @@ define(function(require) {
       },
 
       onShow: function cb_onShow() {
-        console.log('> on show');
         _passcodeInput.focus();
       },
 
-      onHide: function cb_onHide() {
-        console.log('> on hide');
+      onBeforeHide: function cb_onHide() {
         _cleanScreen();
       }
 
