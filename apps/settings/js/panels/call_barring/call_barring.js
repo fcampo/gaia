@@ -1,5 +1,3 @@
-/* global DsdsSettings */
-
 /**
  *  Call Barring Settings
  *  Manage the state of the different services of call barring
@@ -8,9 +6,6 @@ define(function(require) {
   'use strict';
 
   var Observable = require('modules/mvvm/observable');
-
-  var _mobileConnection,
-      _voiceServiceClassMask;
 
   var _cbAction = {
     CALL_BARRING_BAOC: 0,     // BAOC: Barring All Outgoing Calls
@@ -42,16 +37,9 @@ define(function(require) {
     boicExhc_enabled: '',
     baic_enabled: '',
     baicR_enabled: '',
+
     // updatingState
     updating: false,
-
-    // rest of functions
-    _init: function() {
-      _mobileConnection = window.navigator.mozMobileConnections[
-        DsdsSettings.getIccCardIndexForCallSettings()
-      ];
-      _voiceServiceClassMask = _mobileConnection.ICC_SERVICE_CLASS_VOICE;
-    },
 
     _enable: function(elementArray) {
       elementArray.forEach(function disable(element) {
@@ -81,15 +69,14 @@ define(function(require) {
      * @param id Code of the service we want to request the state of
      * @returns Promise with result/error of the request
      */
-    _getRequest: function(id) {
+    _getRequest: function(api, id) {
       var callOptions = {
         'program': id,
-        'serviceClass': _voiceServiceClassMask
+        'serviceClass': api.ICC_SERVICE_CLASS_VOICE
       };
-
       return new Promise(function (resolve, reject) {
         // Send the request
-        var request = _mobileConnection.getCallBarringOption(callOptions);
+        var request = api.getCallBarringOption(callOptions);
         request.onsuccess = function() {
           resolve(request.result.enabled);
         };
@@ -111,10 +98,10 @@ define(function(require) {
      *   'serviceClass': // type of RIL service (voice in this case)
      * }
      */
-    _setRequest: function(options) {
+    _setRequest: function(api, options) {
       return new Promise(function (resolve, reject) {
         // Send the request
-        var request = _mobileConnection.setCallBarringOption(options);
+        var request = api.setCallBarringOption(options);
         request.onsuccess = function() {
           resolve();
         };
@@ -125,81 +112,108 @@ define(function(require) {
       });
     },
 
-    set: function(setting, password) {
-      this.updating = true;
-      var allElements = [
-        'baoc',
-        'boic',
-        'boicExhc',
-        'baic',
-        'baicR'
-      ];
-      this._disable(allElements);
+    set: function(api, setting, password) {
+      // Check for updating in progress
+      if (!!this.updating) {
+        return;
+      }
+      // Check for API to be called
+      if (!api) {
+        return;
+      }
 
-      // get options
-      var options = {
-        'program': _cbServiceMapper[setting],
-        'enabled': !this[setting],
-        'password': password,
-        'serviceClass': _voiceServiceClassMask
-      };
       var self = this;
-      self._setRequest(options).then(function success() {
-        self[setting] = !self[setting];
-      }).catch(function errored(err) {
-        console.error('Error while updating new value for ' + setting);
-      }).then(function doAnyways() {
-        self.updating = false;
-        self._enable(allElements);
+      return new Promise(function (resolve, reject) {
+        self.updating = true;
+        var allElements = [
+          'baoc',
+          'boic',
+          'boicExhc',
+          'baic',
+          'baicR'
+        ];
+        self._disable(allElements);
+        // get options
+        var options = {
+          'program': _cbServiceMapper[setting],
+          'enabled': !self[setting],
+          'password': password,
+          'serviceClass': api.ICC_SERVICE_CLASS_VOICE
+        };
+
+        var error = null;
+        self._setRequest(api, options).then(function success() {
+          self[setting] = !self[setting];
+        }).catch(function errored(err) {
+          error = err;
+        }).then(function doAnyways() {
+          self.updating = false;
+          self._enable(allElements);
+          if (!error) {
+            resolve();
+          } else {
+            reject(error);
+          }
+        });
       });
     },
 
-    getAll: function() {
-      this.updating = true;
-
-      var allElements = [
-        'baoc',
-        'boic',
-        'boicExhc',
-        'baic',
-        'baicR'
-      ];
-      this._disable(allElements);
+    getAll: function(api) {
+      // Check for updating in progress
+      if (!!this.updating) {
+        return;
+      }
+      // Check for API to be called
+      if (!api) {
+        return;
+      }
 
       var self = this;
-      var setting = 'baoc';
-      self._getRequest(_cbServiceMapper[setting]).then(
-        function received(value) {
-        self[setting] = value;
-        setting = 'boic';
-        return self._getRequest(_cbServiceMapper[setting]);
-      }).then(function received(value) {
-        self[setting] = value;
-        setting = 'boicExhc';
-        return self._getRequest(_cbServiceMapper[setting]);
-      }).then(function received(value) {
-        self[setting] = value;
-        setting = 'baic';
-        return self._getRequest(_cbServiceMapper[setting]);
-      }).then(function received(value) {
-        self[setting] = value;
-        setting = 'baicR';
-        return self._getRequest(_cbServiceMapper[setting]);
-      }).then(function received(value) {
-        self[setting] = value;
-      }).catch(function errorWhileProcessing(err) {
-        console.error('Error receiving Call Barring status: ' +
-          err.name + ' - ' + err.message);
-      }).then(function afterEverythingDone() {
-        self.updating = false;
-        self._enable(allElements);
+      return new Promise(function (resolve, reject) {
+        self.updating = true;
+
+        var allElements = [
+          'baoc',
+          'boic',
+          'boicExhc',
+          'baic',
+          'baicR'
+        ];
+        self._disable(allElements);
+
+        var setting = 'baoc';
+        self._getRequest(api, _cbServiceMapper[setting]).then(
+          function received(value) {
+          self[setting] = value;
+          setting = 'boic';
+          return self._getRequest(api, _cbServiceMapper[setting]);
+        }).then(function received(value) {
+          self[setting] = value;
+          setting = 'boicExhc';
+          return self._getRequest(api, _cbServiceMapper[setting]);
+        }).then(function received(value) {
+          self[setting] = value;
+          setting = 'baic';
+          return self._getRequest(api, _cbServiceMapper[setting]);
+        }).then(function received(value) {
+          self[setting] = value;
+          setting = 'baicR';
+          return self._getRequest(api, _cbServiceMapper[setting]);
+        }).then(function received(value) {
+          self[setting] = value;
+        }).catch(function errorWhileProcessing(err) {
+          console.error('Error receiving Call Barring status: ' +
+            err.name + ' - ' + err.message);
+        }).then(function afterEverythingDone() {
+          self.updating = false;
+          self._enable(allElements);
+          resolve();
+        });
       });
     }
   };
 
-  return function ctor_callBarring() {
-      var callBarring = Observable(call_barring_prototype);
-      callBarring._init();
-    return callBarring;
-  };
+  var callBarring = Observable(call_barring_prototype);
+
+  return callBarring;
 });

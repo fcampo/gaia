@@ -1,4 +1,4 @@
-
+/* global DsdsSettings */
 
 define(function(require) {
   'use strict';
@@ -6,11 +6,13 @@ define(function(require) {
   var SettingsPanel = require('modules/settings_panel');
   var CallBarring = require('panels/call_barring/call_barring');
   var InputPasscodeScreen = require('panels/call_barring/cb_passcode_dialog');
+  var Toaster = require('shared/toaster');
 
   return function ctor_call_barring() {
-    var _callBarring = CallBarring();
+    var _callBarring = CallBarring;
     var _passcodeScreen = InputPasscodeScreen();
 
+    var _mobileConnection;
     var _cbSettings = {};
 
     var _refresh;
@@ -82,9 +84,20 @@ define(function(require) {
         // passcode screen confirmed
         var inputID = input.parentNode.parentNode.id;
 
-        _callBarring.set(inputID, passcode);
+        var setting = inputID.substring(6);
+        _callBarring.set(_mobileConnection, setting, passcode).catch(
+          function error(err) {
+          // err = { name, message }
+          var toast = {
+            messageL10nId: 'callBarring-update-item-error',
+            messageL10nArgs: {'error': err.name || 'unknown'},
+            latency: 2000,
+            useTransition: true
+          };
+          Toaster.showToast(toast);
+        });
       }).catch(function canceled() {
-        // passcode screen canceled
+        // passcode screen canceled, nothing to do yet
       });
     }
 
@@ -102,6 +115,10 @@ define(function(require) {
           _cbSettings[i].querySelector('input').
             addEventListener('click', _callBarringClick);
         }
+
+        _mobileConnection = window.navigator.mozMobileConnections[
+          DsdsSettings.getIccCardIndexForCallSettings()
+        ];
 
         _passcodeScreen.init();
       },
@@ -153,7 +170,7 @@ define(function(require) {
 
       onShow: function cb_onShow() {
         if (_refresh) {
-          _callBarring.getAll();
+          _callBarring.getAll(_mobileConnection);
         }
       },
 
@@ -170,6 +187,8 @@ define(function(require) {
         _callBarring.unobserve('boicExhc_enabled');
         _callBarring.unobserve('baic_enabled');
         _callBarring.unobserve('baicR_enabled');
+
+        _callBarring.unobserve('updating');
       }
 
     });
