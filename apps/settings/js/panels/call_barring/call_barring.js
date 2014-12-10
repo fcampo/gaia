@@ -1,5 +1,3 @@
-/* global DsdsSettings */
-
 /**
  *  Call Barring Settings
  *  Manage the state of the different services of call barring
@@ -46,11 +44,9 @@ define(function(require) {
     updating: false,
 
     // rest of functions
-    _init: function() {
-      _mobileConnection = window.navigator.mozMobileConnections[
-        DsdsSettings.getIccCardIndexForCallSettings()
-      ];
-      _voiceServiceClassMask = _mobileConnection.ICC_SERVICE_CLASS_VOICE;
+    init: function(mobileConn, voiceService) {
+      _mobileConnection = mobileConn;
+      _voiceServiceClassMask = voiceService;
     },
 
     _enable: function(elementArray) {
@@ -126,35 +122,54 @@ define(function(require) {
     },
 
     set: function(setting, password) {
-      this.updating = true;
-      var allElements = [
-        'baoc',
-        'boic',
-        'boicExhc',
-        'baic',
-        'baicR'
-      ];
-      this._disable(allElements);
 
-      // get options
-      var options = {
-        'program': _cbServiceMapper[setting],
-        'enabled': !this[setting],
-        'password': password,
-        'serviceClass': _voiceServiceClassMask
-      };
+      // Check for updating in progress
+      if (!!this.updating) {
+        return;
+      }
+
       var self = this;
-      self._setRequest(options).then(function success() {
-        self[setting] = !self[setting];
-      }).catch(function errored(err) {
-        console.error('Error while updating new value for ' + setting);
-      }).then(function doAnyways() {
-        self.updating = false;
-        self._enable(allElements);
+      return new Promise(function (resolve, reject) {
+        self.updating = true;
+        var allElements = [
+          'baoc',
+          'boic',
+          'boicExhc',
+          'baic',
+          'baicR'
+        ];
+        self._disable(allElements);
+
+        // get options
+        var options = {
+          'program': _cbServiceMapper[setting],
+          'enabled': !self[setting],
+          'password': password,
+          'serviceClass': _voiceServiceClassMask
+        };
+        var error = null;
+        self._setRequest(options).then(function success() {
+          self[setting] = !self[setting];
+        }).catch(function errored(err) {
+          error = err;
+        }).then(function doAnyways() {
+          self.updating = false;
+          self._enable(allElements);
+          if (!error) {
+            resolve();
+          } else {
+            reject(error);
+          }
+        });
       });
     },
 
     getAll: function() {
+      // Check for updating in progress
+      if (this.updating) {
+        return;
+      }
+
       this.updating = true;
 
       var allElements = [
@@ -197,9 +212,7 @@ define(function(require) {
     }
   };
 
-  return function ctor_callBarring() {
-      var callBarring = Observable(call_barring_prototype);
-      callBarring._init();
-    return callBarring;
-  };
+  var callBarring = Observable(call_barring_prototype);
+
+  return callBarring;
 });

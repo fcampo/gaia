@@ -1,4 +1,4 @@
-
+/* global DsdsSettings */
 
 define(function(require) {
   'use strict';
@@ -6,9 +6,10 @@ define(function(require) {
   var SettingsPanel = require('modules/settings_panel');
   var CallBarring = require('panels/call_barring/call_barring');
   var InputPasscodeScreen = require('panels/call_barring/cb_passcode_dialog');
+  var Toaster = require('shared/toaster');
 
   return function ctor_call_barring() {
-    var _callBarring = CallBarring();
+    var _callBarring = CallBarring;
     var _passcodeScreen = InputPasscodeScreen();
 
     var _cbSettings = {};
@@ -82,9 +83,18 @@ define(function(require) {
         // passcode screen confirmed
         var inputID = input.parentNode.parentNode.id;
 
-        _callBarring.set(inputID, passcode);
+        _callBarring.set(inputID, passcode).catch(function error(err) {
+          // err = { name, message }
+          var toast = {
+            messageL10nId: 'callBarring-update-item-error',
+            messageL10nArgs: {'error': err.name || 'unknown'},
+            latency: 2000,
+            useTransition: true
+          };
+          Toaster.showToast(toast);
+        });
       }).catch(function canceled() {
-        // passcode screen canceled
+        // passcode screen canceled, nothing to do yet
       });
     }
 
@@ -103,6 +113,12 @@ define(function(require) {
             addEventListener('click', _callBarringClick);
         }
 
+        var _mobileConnection = window.navigator.mozMobileConnections[
+          DsdsSettings.getIccCardIndexForCallSettings()
+        ];
+        var _voiceService = _mobileConnection.ICC_SERVICE_CLASS_VOICE;
+
+        _callBarring.init(_mobileConnection, _voiceService);
         _passcodeScreen.init();
       },
 
