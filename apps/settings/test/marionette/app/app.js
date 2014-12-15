@@ -21,6 +21,8 @@ var ScreenLockPanel = require('./regions/screen_lock');
 var SoundPanel = require('./regions/sound');
 var SupportPanel = require('./regions/support');
 var DeviceInfoPanel = require('./regions/device_info');
+var CallSettingsPanel = require('./regions/call_settings');
+var CallBarringPanel = require('./regions/call_barring');
 
 /**
  * Abstraction around settings app
@@ -60,7 +62,9 @@ Settings.Selectors = {
   'mediaStorageMenuItem': '.menuItem-mediaStorage',
   'keyboardMenuItem': '#menuItem-keyboard',
   'messageMenuItem': '#menuItem-messagingSettings',
-  'deviceInfoMenuItem': '#menuItem-deviceInfo'
+  'deviceInfoMenuItem': '#menuItem-deviceInfo',
+  'callSettingsMenuItem': '#menuItem-callSettings',
+  'callBarringMenuItem': '#menuItem-callBarring'
 };
 
 Settings.prototype = {
@@ -202,6 +206,20 @@ Settings.prototype = {
     this._aboutPanel = this._aboutPanel ||
       new DeviceInfoPanel(this.client);
     return this._aboutPanel;
+  },
+
+  get callSettingsPanel() {
+    this.openPanel('callSettingsMenuItem');
+    this._callSettingsPanel = this._callSettingsPanel ||
+      new CallSettingsPanel(this.client);
+    return this._callSettingsPanel;
+  },
+
+  get callBarringPanel() {
+    this.openPanel('callBarringMenuItem');
+    this._callBarringPanel = this._callBarringPanel ||
+      new CallBarringPanel(this.client);
+    return this._callBarringPanel;
   },
 
   set currentLanguage(value) {
