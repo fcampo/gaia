@@ -123,6 +123,7 @@ require([
             // No need to refresh the call settings items if navigated from
             // panels not manipulating call settings.
             if (e.detail.previous === '#call-cfSettings' ||
+                e.detail.previous === '#call-cbSettings' ||
                 e.detail.previous === '#call-voiceMailSettings') {
               return;
             }
@@ -199,6 +200,9 @@ require([
       // The following features are limited to GSM types.
       var callForwardingItem =
         document.getElementById('menuItem-callForwarding');
+      var callBarringItem =
+        document.getElementById('menuItem-callBarring');
+
       var callWaitingItem = document.getElementById('menuItem-callWaiting');
       var callerIdItem = document.getElementById('menuItem-callerId');
       // The following feature is limited to CDMA types.
@@ -206,6 +210,7 @@ require([
         document.getElementById('menuItem-voicePrivacyMode');
 
       callForwardingItem.hidden =
+      callBarringItem.hidden =
       callWaitingItem.hidden =
       callerIdItem.hidden =
         (_networkTypeCategory[voiceType] !== 'gsm');
@@ -523,6 +528,7 @@ require([
 
             cs_enableTapOnCallerIdItem(false);
             cs_enableTapOnCallWaitingItem(false);
+            cs_enableTapOnCallBarringItem(false);
             cs_enableTapOnCallForwardingItems(false);
             cs_updateCallForwardingSubpanels();
             return;
@@ -536,6 +542,7 @@ require([
 
           cs_enableTapOnCallerIdItem(false);
           cs_enableTapOnCallWaitingItem(false);
+          cs_enableTapOnCallBarringItem(false);
           cs_enableTapOnCallForwardingItems(false);
           cs_displayInfoForAll('callSettingsQuery');
 
@@ -617,12 +624,14 @@ require([
             _getCallForwardingOptionSuccess = true;
             cs_enableTapOnCallerIdItem(true);
             cs_enableTapOnCallWaitingItem(true);
+            cs_enableTapOnCallBarringItem(true);
             //  If the query is a success enable call forwarding items.
             cs_enableTapOnCallForwardingItems(_getCallForwardingOptionSuccess);
           } else {
             cs_displayInfoForAll('callSettingsQueryError');
             _getCallForwardingOptionSuccess = false;
             cs_enableTapOnCallerIdItem(true);
+            cs_enableTapOnCallBarringItem(true);
             cs_enableTapOnCallWaitingItem(true);
             //  If the query is an error disable call forwarding items.
             cs_enableTapOnCallForwardingItems(_getCallForwardingOptionSuccess);
@@ -663,6 +672,7 @@ require([
 
         cs_enableTapOnCallerIdItem(false);
         cs_enableTapOnCallWaitingItem(false);
+        cs_enableTapOnCallBarringItem(false);
         cs_enableTapOnCallForwardingItems(false);
 
         var req = _mobileConnection.getCallingLineIdRestriction();
@@ -728,6 +738,7 @@ require([
       _taskScheduler.enqueue('CALLER_ID', function(done) {
         cs_enableTapOnCallerIdItem(false);
         cs_enableTapOnCallWaitingItem(false);
+        cs_enableTapOnCallBarringItem(false);
         cs_enableTapOnCallForwardingItems(false);
 
         SettingsCache.getSettings(function(results) {
@@ -770,6 +781,7 @@ require([
         cs_updateCallerIdItemState(function() {
           cs_enableTapOnCallerIdItem(true);
           cs_enableTapOnCallWaitingItem(true);
+          cs_enableTapOnCallBarringItem(true);
           cs_enableTapOnCallForwardingItems(true);
         });
       };
@@ -863,6 +875,14 @@ require([
       });
     }
 
+    function cs_enableTapOnCallBarringItem(enable) {
+      var element = document.getElementById('menuItem-callBarring');
+      if (enable) {
+        element.removeAttribute('aria-disabled');
+      } else {
+        element.setAttribute('aria-disabled', true);
+      }
+    }
 
     /**
      *
@@ -882,6 +902,7 @@ require([
           cs_updateCallWaitingItemState(function() {
             cs_enableTapOnCallerIdItem(true);
             cs_enableTapOnCallWaitingItem(true);
+            cs_enableTapOnCallBarringItem(true);
             // Keep the state of call forwarding items.
             cs_enableTapOnCallForwardingItems(_getCallForwardingOptionSuccess);
           });
@@ -889,6 +910,7 @@ require([
         };
         cs_enableTapOnCallerIdItem(false);
         cs_enableTapOnCallWaitingItem(false);
+        cs_enableTapOnCallBarringItem(false);
         cs_enableTapOnCallForwardingItems(false);
         var confirmInput =
           alertPanel.querySelector('.cw-alert-checkbox-label input');
@@ -909,12 +931,14 @@ require([
           cs_updateCallWaitingItemState(function() {
             cs_enableTapOnCallerIdItem(true);
             cs_enableTapOnCallWaitingItem(true);
+            cs_enableTapOnCallBarringItem(true);
             // Keep the state of call forwarding items.
             cs_enableTapOnCallForwardingItems(_getCallForwardingOptionSuccess);
           });
         };
         cs_enableTapOnCallerIdItem(false);
         cs_enableTapOnCallWaitingItem(false);
+        cs_enableTapOnCallBarringItem(false);
         cs_enableTapOnCallForwardingItems(false);
         var req = _mobileConnection.setCallWaitingOption(input.checked);
         req.onsuccess = req.onerror = handleSetCallWaiting;
