@@ -55,8 +55,8 @@ define(function(require) {
       if (!!this.baic) {
         this.baicR_enabled = false;
       }
-
     },
+
     _disable: function(elementArray) {
       elementArray.forEach(function disable(element) {
         this[element + '_enabled'] = false;

@@ -68,12 +68,14 @@ define(function(require) {
       if (_passcodeBuffer.length === 4) {
         var password = _passcodeBuffer;
         _closePanel();
+        /*jshint validthis: true */
         this.resolve(password);
       }
     }
 
     function cancelClicked() {
       _closePanel();
+      /*jshint validthis: true */
       this.reject();
     }
 

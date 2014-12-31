@@ -197,7 +197,6 @@ define(function(require) {
       onBeforeHide: function cb_onHide() {
         _cleanScreen();
       }
-
     });
   };
 });

@@ -139,6 +139,10 @@ define(function(require) {
         _refresh = true;
         _updating = false;
 
+        for (var element in _cbSettings) {
+          _updateCallBarringItem(_cbSettings[element], {'checked': false});
+        }
+
         window.addEventListener('panelready', refresh_on_load);
 
         // Changes on settings value
@@ -204,7 +208,6 @@ define(function(require) {
 
         _callBarring.unobserve('updating');
       }
-
     });
   };
 });
