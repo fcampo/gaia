@@ -351,6 +351,10 @@ require.config({
         'main',
         'modules/mvvm/observable'
       ]
+    },
+    {
+      name: 'panels/call_barring_passcode_change/panel',
+      exclude: ['main']
     }
   ]
 });

@@ -15,6 +15,7 @@ define(function(require) {
     var _mobileConnection;
     var _cbSettings = {};
 
+    var _refresh;
     var _updating;
 
     /**
@@ -26,6 +27,21 @@ define(function(require) {
       _mobileConnection = window.navigator.mozMobileConnections[
         DsdsSettings.getIccCardIndexForCallSettings()
       ];
+    }
+
+    /**
+     *  Manage when to update the data
+     */
+    function refresh_on_load(e) {
+      // Refresh when:
+      //  - we load the panel from #call
+      //  - we re-load the panel after hide (screen off or change app)
+      // But NOT when:
+      //  - we come back from changing the password
+      if (e.detail.current === '#call-cbSettings' &&
+          e.detail.previous === '#call-barring-passcode-change') {
+            _refresh = false;
+      }
     }
 
     /**
@@ -120,7 +136,10 @@ define(function(require) {
       },
 
       onBeforeShow: function cb_onBeforeShow() {
+        _refresh = true;
         _updating = false;
+
+        window.addEventListener('panelready', refresh_on_load);
 
         // Changes on settings value
         _callBarring.observe('baoc', function(newValue) {
@@ -162,11 +181,15 @@ define(function(require) {
       },
 
       onShow: function cb_onShow() {
-        _updateMobileConnection();
-        _callBarring.getAll(_mobileConnection);
+        if (_refresh) {
+          _updateMobileConnection();
+          _callBarring.getAll(_mobileConnection);
+        }
       },
 
       onBeforeHide: function cb_onHide() {
+        window.removeEventListener('panelready', refresh_on_load);
+
         _callBarring.unobserve('baoc');
         _callBarring.unobserve('boic');
         _callBarring.unobserve('boicExhc');
