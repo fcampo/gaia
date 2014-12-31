@@ -11,21 +11,21 @@
         <h2 data-l10n-id="callBarring-outgoing"> Outgoing calls </h2>
       </header>
       <ul id="list-callBarring-outgoing">
-        <li id="li-cb-baoc" aria-disabled="true">
+        <li id="li-cb-baoc">
           <label class="pack-switch checkbox-label">
             <input type="checkbox">
             <span data-l10n-id="callBarring-baoc">All</span>
             <small id="baoc-desc"></small>
           </label>
         </li>
-        <li id="li-cb-boic" aria-disabled="true">
+        <li id="li-cb-boic">
           <label class="pack-switch checkbox-label">
             <input type="checkbox">
             <span data-l10n-id="callBarring-boic">International</span>
             <small id="boic-desc"></small>
           </label>
         </li>
-        <li id="li-cb-boicExhc" aria-disabled="true">
+        <li id="li-cb-boicExhc">
           <label class="pack-switch checkbox-label">
             <input type="checkbox">
             <span data-l10n-id="callBarring-boicExhc">International except Home Country</span>
@@ -38,14 +38,14 @@
         <h2 data-l10n-id="callBarring-incoming"> Incoming calls </h2>
       </header>
       <ul id="list-callBarring-incoming">
-        <li id="li-cb-baic" aria-disabled="true">
+        <li id="li-cb-baic">
           <label class="pack-switch checkbox-label">
             <input type="checkbox">
             <span data-l10n-id="callBarring-baic">All</span>
             <small id="baic-desc"></small>
           </label>
         </li>
-        <li id="li-cb-baicR" aria-disabled="true">
+        <li id="li-cb-baicR">
           <label class="pack-switch checkbox-label">
             <input type="checkbox">
             <span data-l10n-id="callBarring-baicR">All while roaming</span>
@@ -65,6 +65,26 @@
     </div>
 
     <panel data-path="panels/call_barring/panel"></panel>
+
+    <form data-type="confirm" role="dialog" id="cb-passcode" hidden>
+      <input type="number" x-inputmode="digit" class="passcode-input" />
+      <div class="passcode-container">
+        <h1 id="cb-passcode-title" data-l10n-id="callBarring-passcode-enter">Enter passcode</h1>
+        <div class="passcode" id="cb-passcode-pseudo-input">
+          <span class="passcode-digit"></span>
+          <span class="passcode-digit"></span>
+          <span class="passcode-digit"></span>
+          <span class="passcode-digit"></span>
+        </div>
+        <p id="cb-passcode-def" data-l10n-id="callBarring-passcode-unknown">
+          In case you don't know your passcode, please contact your carrier
+        </p>
+      </div>
+      <menu>
+        <button id="cb-passcode-cancel-btn" data-l10n-id="cancel">Cancel</button>
+        <button id="cb-passcode-ok-btn" data-l10n-id="ok" class="recommend" disabled>OK</button>
+      </menu>
+    </form>
 
   </template>
 </element>
