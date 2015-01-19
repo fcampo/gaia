@@ -34,9 +34,8 @@ define(function(require) {
     };
 
     function _changeMode(mode) {
-      _hideErrorMessage();
       _passcodePanel.dataset.mode = _MODE = mode;
-      _updatePassCodeUI();
+      _hideErrorMessage();
     }
 
     function _getInputKey(evt) {
@@ -62,7 +61,7 @@ define(function(require) {
         _passcodeBuffer += key;
       }
 
-      _updatePassCodeUI();
+      _updatePasscodeUI();
       _enablePasscode();
     }
 
@@ -72,7 +71,7 @@ define(function(require) {
           case 'edit':
             if (_checkPasscode()) {
               _passcodeBuffer = '';
-              _updatePassCodeUI();
+              _updatePasscodeUI();
               _changeMode('new');
             } else {
               _passcodeBuffer = '';
@@ -111,7 +110,7 @@ define(function(require) {
       _passcodePanel.dataset.passcodeStatus = 'success';
     }
 
-    function _updatePassCodeUI() {
+    function _updatePasscodeUI() {
       for (var i = 0; i < 8; i++) {
         if (i < _passcodeBuffer.length) {
           _passcodeDigits[i].dataset.dot = true;
@@ -121,10 +120,10 @@ define(function(require) {
       }
     }
 
-    function _cleanScreen() {
-      _hideErrorMessage();
+    function _resetScreen() {
       _passcodeBuffer = '';
-      _updatePassCodeUI();
+      _changeMode('edit');
+      _updatePasscodeUI();
     }
 
     function _checkPasscode() {
@@ -146,9 +145,7 @@ define(function(require) {
         SettingsService.back();
       }).catch(function error(err) {
         // back to first screen
-        _passcodeBuffer = '';
-        _updatePassCodeUI();
-        _changeMode('edit');
+        _resetScreen();
 
         // show error
         _showErrorMessage('incorrect');
@@ -186,16 +183,24 @@ define(function(require) {
             evt.preventDefault();
           }
         );
+      },
 
-        _passcodePanel.dataset.mode = _MODE = 'edit';
+      onBeforeShow: function cb_beforeShow() {
+        console.log('> BEFORE SHOW');
+        console.log('>> MODE = ' + _MODE);
+        _changeMode('edit');
       },
 
       onShow: function cb_onShow() {
+        console.log('> SHOWING');
+        console.log('>> MODE = ' + _MODE);
         _passcodeInput.focus();
       },
 
       onBeforeHide: function cb_onHide() {
-        _cleanScreen();
+        _resetScreen();
+        console.log('> HIDING');
+        console.log('>> MODE = ' + _MODE);
       }
     });
   };

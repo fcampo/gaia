@@ -136,10 +136,12 @@ define(function(require) {
       },
 
       onBeforeShow: function cb_onBeforeShow() {
+        console.log('>> BEFORE SHOWING');
         _refresh = true;
         _updating = false;
 
         for (var element in _cbSettings) {
+          _callBarring[element] = false;
           _updateCallBarringItem(_cbSettings[element], {'checked': false});
         }
 
@@ -147,18 +149,23 @@ define(function(require) {
 
         // Changes on settings value
         _callBarring.observe('baoc', function(newValue) {
+          console.log('CHANGE on BAOC = ' + newValue);
           _updateCallBarringItem(_cbSettings.baoc, {'checked': newValue});
         });
         _callBarring.observe('boic', function(newValue) {
+          console.log('CHANGE on BOIC = ' + newValue);
           _updateCallBarringItem(_cbSettings.boic, {'checked': newValue});
         });
         _callBarring.observe('boicExhc', function(newValue) {
+          console.log('CHANGE on BOIC EX HC = ' + newValue);
           _updateCallBarringItem(_cbSettings.boicExhc, {'checked': newValue});
         });
         _callBarring.observe('baic', function(newValue) {
+          console.log('CHANGE on BAIC = ' + newValue);
           _updateCallBarringItem(_cbSettings.baic, {'checked': newValue});
         });
         _callBarring.observe('baicR', function(newValue) {
+          console.log('CHANGE on BAIC =   + newValueR');
           _updateCallBarringItem(_cbSettings.baicR, {'checked': newValue});
         });
 
@@ -185,6 +192,7 @@ define(function(require) {
       },
 
       onShow: function cb_onShow() {
+        console.log('>> SHOWING');
         if (_refresh) {
           _updateMobileConnection();
           _callBarring.getAll(_mobileConnection);
@@ -192,6 +200,7 @@ define(function(require) {
       },
 
       onBeforeHide: function cb_onHide() {
+        console.log('>> BEFORE HIDING');
         window.removeEventListener('panelready', refresh_on_load);
 
         _callBarring.unobserve('baoc');

@@ -15,12 +15,17 @@ define(function(require) {
        * }
        */
       function _changeCallBarringPasscode(api, pinData) {
+        console.log('> REQUEST TO CHANGE PASSWORD >');
         return new Promise(function finished(resolve, reject) {
           var request = api.changeCallBarringPassword(pinData);
           request.onsuccess = function() {
+            console.log('>> SUCCESS');
             resolve();
           };
           request.onerror = function() {
+            console.log('>> ERROR: ' +
+              request.error.name +
+              ' - ' + request.message);
             /* request.error = { name, message } */
             reject(request.error);
           };

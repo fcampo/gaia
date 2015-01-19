@@ -74,13 +74,18 @@ define(function(require) {
         'program': id,
         'serviceClass': api.ICC_SERVICE_CLASS_VOICE
       };
+      console.log('> REQUEST TO GET SERVICE STATUS > ' + id);
       return new Promise(function (resolve, reject) {
         // Send the request
         var request = api.getCallBarringOption(callOptions);
         request.onsuccess = function() {
+          console.log('ID > ' + id + ' > SUCCESS: ' + request.result.enabled);
           resolve(request.result.enabled);
         };
         request.onerror = function() {
+          console.log('ID > ' + id + ' > ERROR: ' +
+            request.error.name +
+            ' - ' + request.message);
           /* request.error = { name, message } */
           reject(request.error);
         };
@@ -99,13 +104,18 @@ define(function(require) {
      * }
      */
     _setRequest: function(api, options) {
+      console.log('> REQUEST TO SET SERVICE >' + options.program);
       return new Promise(function (resolve, reject) {
         // Send the request
         var request = api.setCallBarringOption(options);
         request.onsuccess = function() {
+          console.log('>> SUCCESS');
           resolve();
         };
         request.onerror = function() {
+          console.log('>> ERROR: ' +
+            request.error.name +
+            ' - ' + request.message);
           /* request.error = { name, message } */
           reject(request.error);
         };
@@ -184,29 +194,40 @@ define(function(require) {
         var setting = 'baoc';
         self._getRequest(api, _cbServiceMapper[setting]).then(
           function received(value) {
+          console.log('updating - ' + setting + ' from: ' + self[setting]);
           self[setting] = value;
+          console.log('now is ' + self[setting]);
           setting = 'boic';
           return self._getRequest(api, _cbServiceMapper[setting]);
         }).then(function received(value) {
+          console.log('updating - ' + setting + ' from: ' + self[setting]);
           self[setting] = value;
+          console.log('now is ' + self[setting]);
           setting = 'boicExhc';
           return self._getRequest(api, _cbServiceMapper[setting]);
         }).then(function received(value) {
+          console.log('updating - ' + setting + ' from: ' + self[setting]);
           self[setting] = value;
+          console.log('now is ' + self[setting]);
           setting = 'baic';
           return self._getRequest(api, _cbServiceMapper[setting]);
         }).then(function received(value) {
+          console.log('updating - ' + setting + ' from: ' + self[setting]);
           self[setting] = value;
+          console.log('now is ' + self[setting]);
           setting = 'baicR';
           return self._getRequest(api, _cbServiceMapper[setting]);
         }).then(function received(value) {
+          console.log('updating - ' + setting + ' from: ' + self[setting]);
           self[setting] = value;
+          console.log('now is ' + self[setting]);
         }).catch(function errorWhileProcessing(err) {
           console.error('Error receiving Call Barring status: ' +
             err.name + ' - ' + err.message);
         }).then(function afterEverythingDone() {
           self.updating = false;
           self._enable(allElements);
+          console.log('after update status: ' + JSON.stringify(self));
           resolve();
         });
       });
