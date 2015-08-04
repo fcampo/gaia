@@ -85,6 +85,7 @@ window.addEventListener('load', function() {
     navigator.mozSetMessageHandler(
       'activity',
       function(activity) {
+        console.info(activity);
         ListController.setActivity(
           activity
         );

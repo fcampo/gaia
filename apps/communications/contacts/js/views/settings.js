@@ -680,6 +680,7 @@ contacts.Settings = (function() {
   var close = function close() {
     if (newOrderByLastName != null &&
         newOrderByLastName != orderByLastName && contacts.List) {
+      console.info(newOrderByLastName);
       contacts.List.setOrderByLastName(newOrderByLastName);
       utils.cookie.update({order: newOrderByLastName});
       Cache.evict();

@@ -1,5 +1,6 @@
-/* global ParamUtils, ContactsService, utils, LazyLoader,
-ContactToVcardBlob, VcardFilename, ConfirmDialog, ActionMenu */
+/* globals ParamUtils, ContactsService, utils, LazyLoader,
+           ContactToVcardBlob, VcardFilename, ConfirmDialog, ActionMenu
+*/
 
 (function(exports) {
   'use strict';
