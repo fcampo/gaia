@@ -46,7 +46,6 @@ var SdManager = {
 
     var importButton = UIManager.sdImportButton;
 
-
     utils.sdcard.retrieveFiles([
       'text/vcard',
       'text/directory;profile=vCard',
@@ -105,7 +104,7 @@ var SdManager = {
       Overlay.showProgressBar('memoryCardContacts-importing', n);
     }
 
-    function imported_contact() {
+    function imported_contact(contact) {
       importedContacts++;
       Overlay.updateProgressBar();
     }
