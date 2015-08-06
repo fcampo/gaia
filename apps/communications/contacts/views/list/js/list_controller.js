@@ -1,10 +1,17 @@
-/* globals ParamUtils, ContactsService, utils, LazyLoader,
-           ContactToVcardBlob, VcardFilename, ConfirmDialog, ActionMenu
-*/
+/* global ParamUtils */
+/* global ContactsService */
+/* global utils */
+/* global LazyLoader */
+/* global ContactToVcardBlob */
+/* global VcardFilename */
+/* global ConfirmDialog */
+/* global ActionMenu */
 
 (function(exports) {
   'use strict';
-  var _activity, _actionMenu;
+
+  var _activity,
+      _actionMenu;
 
   /**
    * Per RFC 6350, text/vcard is the canonical MIME media type for vCards, but

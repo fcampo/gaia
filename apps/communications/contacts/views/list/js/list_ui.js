@@ -202,23 +202,33 @@ monitorTagVisibility */
   }
 
   function checkContactChanges() {
+    console.log('> LIST > UI > checking contact change...');
     var changesStringified = sessionStorage.getItem('contactChanges');
     sessionStorage.setItem('contactChanges', null);
     if (!changesStringified ||
         changesStringified === 'null') {
+      console.log('no changes detected');
       return;
     }
     var changes = JSON.parse(changesStringified);
+    console.log('--changes detected? ' + JSON.stringify(changes));
+
     if (!changes || !changes[0] || !changes[0].reason) {
+      console.log('no event on changes array');
       return;
     }
 
-    oncontactchange(changes[0]);
+    changes.forEach((contact) => {
+      oncontactchange(contact);
+    });
+    // oncontactchange(changes[0]);
   }
 
   function checkOrderChange() {
+    console.log('> LIST > UI > checking order change...');
     var orderChange = sessionStorage.getItem('orderchange');
-
+    console.log('> from session: ' +
+      orderChange + '(' + typeof orderChange + ')');
     // Update list if neeeded
     if (orderChange && orderChange !== 'null') {
       setOrderByLastName(!orderByLastName);
@@ -238,6 +248,7 @@ monitorTagVisibility */
     });
 
     window.addEventListener('pageshow', function() {
+      console.log('> LIST > UI > pageShow');
       window.dispatchEvent(new CustomEvent('list-shown'));
       checkContactChanges();
       checkOrderChange();
@@ -263,6 +274,7 @@ monitorTagVisibility */
   }
 
   function oncontactchange(event) {
+    console.log('> performing changes!');
     if (typeof pendingChanges[event.contactID] !== 'undefined') {
       pendingChanges[event.contactID].push({
         contactID: event.contactID,
@@ -290,6 +302,7 @@ monitorTagVisibility */
     // if the change affects the cache or not, so we avoid evicting it when
     // is not needed.
     Cache.evict();
+    console.log('REASON = ' + event.reason);
     switch (event.reason) {
       case 'update':
       case 'create':
@@ -465,23 +478,32 @@ monitorTagVisibility */
    * @param (Function) callback function to be invoked after process
    */
   function initConfiguration(callback) {
+    console.log('LIST > INIT CONFIG');
+    console.log('--> orderByLastName INITIAL - ' + orderByLastName);
     callback = callback || function() {};
     if (orderByLastName !== null && defaultImage !== null) {
       callback();
+      console.log('early return!!');
       return;
     }
 
+    console.log('...reading cookies');
     var config = utils.cookie.load();
     if (config) {
       orderByLastName = config.order;
+      console.log('--> orderByLastName - ' + orderByLastName);
       defaultImage = config.defaultImage;
+      console.log('--> default image? ' + defaultImage);
       callback();
+      console.log('--> early return!');
       return;
     }
 
+    console.log('...loading config');
     utils.config.load('/contacts/config.json').then(function ready(configData) {
       orderByLastName = (configData.defaultContactsOrder ===
                 ORDER_BY_FAMILY_NAME ? true : false);
+      console.log('--> orderByLastName - ' + orderByLastName);
       defaultImage = configData.defaultImage === true;
       utils.cookie.update({
         order: orderByLastName,
@@ -489,7 +511,7 @@ monitorTagVisibility */
       });
       callback();
     }, function configError(err) {
-        window.console.error('Error while reading configuration file');
+        console.error('Error while reading configuration file');
         orderByLastName = utils.cookie.getDefault('order');
         defaultImage = utils.cookie.getDefault('defaultImage');
         utils.cookie.update({
@@ -904,12 +926,15 @@ monitorTagVisibility */
 
   // Adds each contact to its group container
   function appendToList(contact, group, ph) {
+    // console.log('> LIST > UI > append to List');
+    // console.log('> appending contact: ' + JSON.stringify(contact));
+
     ph = ph || createPlaceholder(contact, group);
     var list = getGroupList(group);
 
     var inCache = Cache.active &&
                   (Cache.hasContact(contact.id)) ||
-                  (group == 'favorites' && Cache.hasFavorite(contact.id));
+                  (group === 'favorites' && Cache.hasFavorite(contact.id));
 
     // If above the fold for list or if the contact is in the cache,
     // create the DOM node. If the contact is in the cache and has not
@@ -931,7 +956,7 @@ monitorTagVisibility */
     // can append the new node with the updated information.
     if (inCache) {
       var cachedContact;
-      if (group == 'favorites') {
+      if (group === 'favorites') {
         cachedContact = Cache.getFavorite(contact.id);
       } else {
         cachedContact = Cache.getContact(contact.id);
@@ -940,12 +965,16 @@ monitorTagVisibility */
         '<p class="contact-text"><span class="icon-social';
       cachedContact = cachedContact.split(separator)[0];
 
+      // console.log('> cachedContact: ' + JSON.stringify(cachedContact));
+      // console.log('> ph: ' + JSON.stringify(ph.innerHTML));
       if (cachedContact === ph.innerHTML) {
         ph = null;
         return;
       }
+      // console.log('> contact.id = ' + contact.id);
       var toReplace = list.querySelector('li[data-uuid=\"' +
                                          contact.id + '\"]');
+      // console.log('toReplace = ' + toReplace);
       previousNode = toReplace.nextElementSibling;
       toReplace.parentNode.removeChild(toReplace);
     }
@@ -1309,7 +1338,6 @@ monitorTagVisibility */
       group = '#';
     }
     img.dataset.group = group;
-
   }
 
   // Remove the image for the given list item.  Leave the photo in our cache,
@@ -1406,6 +1434,7 @@ monitorTagVisibility */
   }
 
   function getAllContacts(errorCb, successCb) {
+    console.log('> getting ALL contacts');
     if (Cache.active) {
       headers = Cache.headers;
       iceGroup = document.getElementById('section-group-ice');
@@ -1420,6 +1449,8 @@ monitorTagVisibility */
       var num = 0;
       var chunk = [];
 
+      console.log('> streamed all');
+      console.log('> orderByLastName - ' + orderByLastName);
       ContactsService.getAllStreamed(
         (orderByLastName === true ? 'familyName' : 'givenName'),
         function onContact(contact) {
@@ -1679,9 +1710,10 @@ monitorTagVisibility */
     return ret;
   }
 
-  // Perform contact refresh.  First arg may be either an ID or a contact
-  // object.  If an ID is passed then the contact is retrieved from the
-  // database.  Otherwise refresh the list based on the given contact
+  // Perform contact refresh.
+  // First arg may be either an ID or a contact object.
+  // If an ID is passed then get the contact from the database.
+  // Otherwise refresh the list based on the given contact
   // object without looking up any information.
   function refresh(idOrContact, callback) {
     // Passed a contact, not an ID
@@ -1712,6 +1744,7 @@ monitorTagVisibility */
 
   // Reset the content of the list to 0
   function resetDom(cb) {
+    console.log('--- RESETTING DOM');
     if (loading) {
       return;
     }
@@ -1728,6 +1761,9 @@ monitorTagVisibility */
   }
 
   function setOrderByLastName(value) {
+    console.log('SET ORDER BY LAST NAME');
+    console.log('OLD: ' + orderByLastName);
+    console.log('NEW: ' + value);
     var newOrder = value;
     if (typeof value === 'string') {
       newOrder = value === 'true' ? true : false;

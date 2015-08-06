@@ -181,6 +181,7 @@
   }
 
   function show(messageId) {
+    console.log('> SETTINGS > OVERLAY > show ' + messageId);
     if (isShown) {
       updateHeaderMsg(messageId);
       return;

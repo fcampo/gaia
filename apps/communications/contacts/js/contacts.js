@@ -37,7 +37,6 @@ var Contacts = (function() {
     loadAsyncScriptsDeferred.resolve = resolve;
   });
 
-  var settingsReady = false;
   var detailsReady = false;
   var formReady = false;
 
@@ -363,28 +362,6 @@ var Contacts = (function() {
     }
   };
 
-  var initSettings = function c_initSettings(callback) {
-    if (settingsReady) {
-      callback();
-    } else {
-      Loader.view('Settings', function viewLoaded() {
-        LazyLoader.load(['/contacts/js/utilities/sim_dom_generator.js',
-          '/contacts/js/utilities/normalizer.js',
-          '/shared/js/contacts/import/utilities/misc.js',
-          '/shared/js/mime_mapper.js',
-          '/shared/js/contacts/import/utilities/vcard_parser.js',
-          '/contacts/js/utilities/icc_handler.js',
-          '/shared/js/contacts/import/utilities/sdcard.js',
-          '/shared/elements/gaia_switch/script.js',
-          '/shared/js/date_time_helper.js'], function() {
-          settingsReady = true;
-          contacts.Settings.init();
-          callback();
-        });
-      });
-    }
-  };
-
   var initDetails = function c_initDetails(callback) {
     if (detailsReady) {
       callback();
@@ -450,11 +427,7 @@ var Contacts = (function() {
   };
 
   var showSettings = function showSettings() {
-    initSettings(function onSettingsReady() {
-      // The number of FB Friends has to be recalculated
-      contacts.Settings.refresh();
-      MainNavigation.go('view-settings', 'fade-in');
-    });
+    window.location.href = ParamUtils.generateUrl('settings');
   };
 
   var stopPropagation = function stopPropagation(evt) {

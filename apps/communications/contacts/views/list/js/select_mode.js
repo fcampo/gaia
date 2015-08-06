@@ -1,6 +1,18 @@
-/* global BulkDelete, utils, ListUI, ContactsService, LazyLoader, Loader,
-Search, ContactsExporter, ListUtils, HeaderUI, ContactsSIMExport, IccHandler,
-ContactsBTExport, ContactsSDExport*/
+/* global ListUI */
+/* global ListUtils */
+/* global HeaderUI */
+/* global utils */
+/* global ContactsService */
+/* global LazyLoader */
+/* global BulkDelete */
+/* global ContactsExporter */
+/* global ContactsSDExport */
+/* global ContactsBTExport */
+/* global ContactsSIMExport */
+/* global IccHandler */
+/* global Loader */
+/* global Search */
+/* global Overlay */
 
 (function(exports) {
   'use strict';
@@ -410,7 +422,7 @@ ContactsBTExport, ContactsSDExport*/
     // warn the user of the ongoin operation, dismiss it
     // once we have the result
     Loader.utility('Overlay', function _loaded() {
-      utils.overlay.show('preparing-contacts', null, 'spinner');
+      Overlay.showSpinner('preparing-contacts');
 
       var selectionPromise = createSelectPromise();
 
@@ -450,7 +462,7 @@ ContactsBTExport, ContactsSDExport*/
       };
       selectionPromise.onerror = function onError() {
         exitSelectMode();
-        utils.overlay.hide();
+        Overlay.hide();
       };
     });
   }
