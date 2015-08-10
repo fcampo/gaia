@@ -43,6 +43,8 @@ suite('contacts_bulk_delete.js', function() {
   });
 
   setup(function() {
+    overlayShowSpy = sinon.spy(window.Overlay, 'show');
+    overlayHideSpy = sinon.spy(window.Overlay, 'hide');
     confirmShowSpy = sinon.spy(ConfirmDialog, 'show');
     confirmHideSpy = sinon.spy(ConfirmDialog, 'hide');
     spies = [confirmShowSpy, confirmHideSpy];

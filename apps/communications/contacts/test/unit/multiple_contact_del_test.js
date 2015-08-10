@@ -52,6 +52,25 @@ suite('Multiple Contacts Delete', function() {
     if (!window.utils) {
       window.utils = {};
     }
+
+    realOverlay = window.Overlay;
+    window.Overlay = {
+      total: 0,
+      shown: false,
+      show: function() {
+        this.shown = true;
+        return this;
+      },
+      hide: function() {},
+      showMenu: function() {},
+      update: function() {},
+      setClass: function() {},
+      setTotal: function(n) {
+        this.total = n;
+      },
+      setHeaderMsg: function() {}
+    };
+
     realContacts = navigator.mozContacts;
     navigator.mozContacts = MockMozContacts;
     realLoader = window.Loader;
@@ -72,6 +91,7 @@ suite('Multiple Contacts Delete', function() {
     window._ = real_;
     fb = realFb;
     navigator.mozContacts = realContacts;
+    window.Overlay = realOverlay;
     window.Loader = realLoader;
     mocksHelperForDelete.suiteTeardown();
     contacts.Settings = realSettings;
@@ -141,5 +161,14 @@ suite('Multiple Contacts Delete', function() {
       done();
     };
     assert.ok(ids, 'No Contact to delete');
+  });
+
+  test('Perform Delete Operation', function(done) {
+    var ids = getContactIds();
+    var promise = createSelectPromise();
+    promise.resolve(ids);
+    BulkDelete.performDelete(promise);
+    assert.ok(window.Overlay.shown, 'overlay not displayed');
+    done();
   });
 });
