@@ -441,24 +441,12 @@ var Contacts = (function() {
     }
   };
 
-  var showOverlay = function c_showOverlay(messageId, progressClass, textId) {
-    var out = utils.overlay.show(messageId, progressClass, textId);
-    // When we are showing the overlay we are often performing other
-    // significant work, such as importing.  While performing this work
-    // it would be nice to avoid the overhead of any accidental reflows
-    // due to touching the list DOM.  For example, importing incrementally
-    // adds contacts to the list which triggers many reflows.  Therefore,
-    // minimize this impact by hiding the list while we are showing the
-    // overlay.
+  var onOverlayShown = function c_onOverlayShown() {
     contacts.List.hide();
-    return out;
   };
 
-  var hideOverlay = function c_hideOverlay() {
-    Loader.utility('Overlay', function _loaded() {
-      contacts.List.show();
-      utils.overlay.hide();
-    });
+  var onOverlayHidden = function c_onOverlayHidden() {
+    contacts.List.show();
   };
 
   var showSettings = function showSettings() {
@@ -687,6 +675,47 @@ var Contacts = (function() {
     window.removeEventListener('DOMContentLoaded', onLoad);
   });
 
+  sessionStorage.setItem('contactChanges', null);
+  window.addEventListener('pageshow', function onPageshow() {
+
+    window.dispatchEvent(new CustomEvent('list-shown'));
+
+    // XXX: Workaround until the platform will be fixed
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1184953
+    document.registerElement(
+      'gaia-header',
+      { prototype: GaiaHeader.prototype }
+    );
+    document.registerElement(
+      'gaia-subheader',
+      { prototype: GaiaSubheader.prototype }
+    );
+
+    // XXX: As well we need to get back the theme color
+    // due to the bug with back&forward cache mentioned before
+    var meta = document.querySelector('meta[name="theme-color"]');
+    document.head.removeChild(meta);
+    meta = document.createElement('meta');
+    meta.content = 'var(--header-background)';
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+
+    // #new handling
+    var eventsStringified = sessionStorage.getItem('contactChanges');
+    if (!eventsStringified || eventsStringified === 'null') {
+      return;
+    }
+
+    var changeEvents = JSON.parse(eventsStringified);
+    for (var i = 0; i < changeEvents.length; i++) {
+      performOnContactChange(changeEvents[i]);
+    }
+    sessionStorage.setItem('contactChanges', null);
+  });
+
+  window.addEventListener('overlayshown', onOverlayShown);
+  window.addEventListener('overlayhidden', onOverlayHidden);
+
   return {
     'goBack' : handleBack,
     'cancel': handleCancel,
@@ -694,8 +723,6 @@ var Contacts = (function() {
     'setCurrent': setCurrent,
     'onLocalized': onLocalized,
     'init': init,
-    'showOverlay': showOverlay,
-    'hideOverlay': hideOverlay,
     'showContactDetail': contactListClickHandler,
     'updateContactDetail': updateContactDetail,
     'loadFacebook': loadFacebook,
