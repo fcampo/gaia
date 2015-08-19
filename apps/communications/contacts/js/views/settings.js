@@ -21,6 +21,7 @@
 /* global BulkDelete */
 /* global ICE */
 /* global Overlay */
+/* global ICE */
 
 var contacts = window.contacts || {};
 
