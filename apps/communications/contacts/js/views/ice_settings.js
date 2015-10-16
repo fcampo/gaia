@@ -278,7 +278,7 @@
 
     activity.onsuccess = () => {
       var contact = activity.result;
-      if( contact ){
+      if (contact) {
         currentICETarget = target === 'select-ice-contact-1' ? 0 : 1;
         selectICEHandler(contact.id);
       }

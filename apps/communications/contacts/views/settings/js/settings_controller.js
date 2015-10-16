@@ -72,7 +72,6 @@
           break;
       }
     }
-
     window.addEventListener('importClicked', handleImport);
 
     function handleExport(event){
@@ -294,7 +293,9 @@
 
     var wakeLock = navigator.requestWakeLock('cpu');
 
-    Overlay.showActivityBar('memoryCardContacts-reading');
+    Overlay.showActivityBar('memoryCardContacts-importing',
+                            false /* no menu */,
+                            'infiniteProgress');
     Overlay.oncancel = function() {
       cancelled = true;
       importer ? importer.finish() : Overlay.hide();
@@ -314,71 +315,83 @@
       }
 
       if (fileArray.length) {
-        utils.sdcard.getTextFromFiles(fileArray, '', onFiles);
+        var promises = [];
+        fileArray.forEach(file => {
+          promises.push(utils.sdcard.getTextFromFile(file, onContacts));
+        });
+        Promise.all(promises).then(results => {
+          var numDupsMerged = results.reduce((sum, current) => {
+            return sum + current;
+          });
+          window.setTimeout(() => {
+            utils.misc.setTimestamp('sd', () => {
+              if (!cancelled) {
+                var msg1 = {
+                  id: 'memoryCardContacts-imported3',
+                  args: {
+                    n: importedContacts
+                  }
+                };
+                var msg2 = !numDupsMerged ? null : {
+                  id: 'contactsMerged',
+                  args: {
+                    numDups: numDupsMerged
+                  }
+                };
+                utils.status.show(msg1, msg2);
+                if (typeof cb === 'function') {
+                  cb();
+                }
+              }
+
+              // Once the timestamp is saved, update the list
+              window.dispatchEvent(new CustomEvent('contactsimportdone'));
+              if (_changedContacts) {
+                console.log('> storing changed contacts: ' +
+                  JSON.stringify(_changedContacts));
+                sessionStorage.setItem('contactChanges',
+                                       JSON.stringify(_changedContacts));
+              }
+
+              resetWait(wakeLock);
+            });
+          }, DELAY_FEEDBACK);
+        }).catch(error => {
+          import_error(error);
+        });
       } else {
         import_error('No contacts were found.', cb);
       }
     });
 
-    function onFiles(err, text) {
-      if (err) {
-        return import_error(err, cb);
-      }
+    function onContacts(text) {
       if (cancelled) {
-        return;
+        return Promise.reject();
       }
-      console.log('> SD > Text = ' + text);
-      importer = new VCFReader(text);
-      if (!text || !importer) {
-        return import_error('No contacts were found.', cb);
-      }
+      return new Promise((resolve, reject) => {
+        importer = new VCFReader(text);
+        if (!text || !importer) {
+          var error = 'No contacts were found';
+          import_error(error);
+          reject(error);
+          return;
+        }
 
-      importer.onread = import_read;
-      importer.onimported = imported_contact;
-      importer.onerror = import_error;
+        importer.onimported = imported_contact;
+        importer.onerror = error => {
+          import_error(error);
+          reject(error);
+        };
 
-      importer.process(function import_finish(total, numDupsMerged) {
-        console.log('> finished importing');
-        window.setTimeout(function onfinish_import() {
-          utils.misc.setTimestamp('sd', function() {
-            // Once the timestamp is saved, update the list
-            window.dispatchEvent(new CustomEvent('contactsimportdone'));
-            if (_changedContacts) {
-              console.log('> storing changed contacts: ' +
-                JSON.stringify(_changedContacts));
-              sessionStorage.setItem('contactChanges',
-                                     JSON.stringify(_changedContacts));
-            }
-            resetWait(wakeLock);
-
-            if (!cancelled) {
-              var msg1 = {
-                id: 'memoryCardContacts-imported3',
-                args: {
-                  n: importedContacts
-                }
-              };
-              var msg2 = !numDupsMerged ? null : {
-                id: 'contactsMerged',
-                args: {
-                  numDups: numDupsMerged
-                }
-              };
-
-              utils.status.show(msg1, msg2);
-
-              if (typeof cb === 'function') {
-                cb();
-              }
-            }
-          });
-        }, DELAY_FEEDBACK);
+        importer.process((unused, numDupsMerged) => {
+          if (cancelled) {
+            reject('Cancelled');
+            Overlay.hide();
+            return;
+          }
+          resolve(numDupsMerged);
+        });
       });
-    }
-
-    function import_read(n) {
-      console.log('> read contact - ' + n);
-      Overlay.showProgressBar('memoryCardContacts-importing', n);
     }
 
     function imported_contact(contact) {

@@ -1,11 +1,13 @@
 'use strict';
-/* exported MockFbLoader */
+/* exported MockfbLoader */
 
-var MockFbLoader = function() {
+var MockfbLoader = function() {
   return {
     loaded: true,
     load: function(callback) {
-      callback();
+      if (callback) {
+        callback();
+      }
     }
   };
 }();

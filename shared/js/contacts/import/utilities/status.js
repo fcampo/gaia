@@ -55,7 +55,7 @@ utils.status = (function() {
    * @param extra: an optional extra line for the message
    */
   var showStatus = function(mainMessage, extra) {
-    console.log('> SETTINGS > calling status with ' + mainMessage);
+    console.log('> STATUS > calling status with ' + JSON.stringify(mainMessage) + 'and' + JSON.stringify(extra));
     // clean listeners in case of previous race conditions
     statusMsg.removeEventListener('transitionend', showAnimationDone);
     statusMsg.removeEventListener('transitionend', hideAnimationDone);
