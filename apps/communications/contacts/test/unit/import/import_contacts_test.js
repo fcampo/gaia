@@ -42,6 +42,7 @@ requireApp(
 requireApp('communications/contacts/test/unit/mock_overlay.js');
 requireApp('communications/contacts/test/unit/mock_loader.js');
 requireApp('communications/contacts/test/unit/mock_fb_loader.js');
+requireApp('communications/contacts/services/contacts.js');
 
 
 requireApp('communications/contacts/views/settings/js/settings_controller.js');
