@@ -155,6 +155,11 @@ monitorTagVisibility, GaiaHeader, GaiaSubheader */
       _action = action;
       toggleICEGroup(false);
     }
+
+    // Hide buttons if the action is a pick
+    if (action === 'pick') {
+      document.body.classList.add('pick');
+    }
   }
 
   function init(reset) {
